@@ -1,26 +1,160 @@
 @import "tailwindcss";
 
+/*
+ * SPIN//BUILD design tokens.
+ * Black-first, grayscale only. Components MUST use these semantic tokens
+ * (bg-bg, text-fg, text-muted, border-line …) — never raw black/white —
+ * so the black↔white inversion flash (html[data-invert]) works everywhere.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #090a10;
+  --fg: #f8fafc;
+  --surface: #12141e;
+  --surface-2: #1b1e2e;
+  --surface-hover: #22263a;
+  --muted: #94a3b8;
+  --subtle: #64748b;
+  --faint: #334155;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.22);
+
+  --accent-domain: #818cf8;
+  --accent-target: #fb7185;
+  --accent-mechanic: #34d399;
+  --accent-trend: #fbbf24;
+  --accent-chaos: #c084fc;
+  --accent-constraint: #38bdf8;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-snap: cubic-bezier(0.3, 1.4, 0.5, 1);
+
+  color-scheme: dark;
+}
+
+html[data-invert] {
+  --bg: #f8fafc;
+  --fg: #0f172a;
+  --surface: #ffffff;
+  --surface-2: #f1f5f9;
+  --surface-hover: #e2e8f0;
+  --muted: #64748b;
+  --subtle: #94a3b8;
+  --faint: #cbd5e1;
+  --line: rgba(0, 0, 0, 0.08);
+  --line-strong: rgba(0, 0, 0, 0.25);
+  color-scheme: light;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-fg: var(--fg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-hover: var(--surface-hover);
+  --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
+  --color-faint: var(--faint);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+
+  --font-sans: var(--font-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono-face), ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  --ease-out-expo: var(--ease-out);
+  --ease-snap: var(--ease-snap);
+
+  --text-micro: 0.625rem;
+  --text-micro--line-height: 1rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  background-color: var(--bg);
+  color: var(--fg);
+  background-image: 
+    radial-gradient(ellipse 90% 50% at 50% 0%, rgba(99, 102, 241, 0.12) 0%, transparent 65%),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+  background-size: 100% 100%, 48px 48px, 48px 48px;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+:focus-visible {
+  outline: 1px solid var(--fg);
+  outline-offset: 3px;
+}
+
+/* Mono metadata label: "TREND ENGINE: ONLINE" */
+@utility label {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  line-height: 1rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Huge editorial display type */
+@utility display {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  line-height: 0.88;
+  text-transform: uppercase;
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@utility hairline {
+  border-color: var(--line);
+  border-width: 1px;
+}
+
+/* Hide scrollbar but keep scrolling (tickers, horizontal rails). */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+dialog::backdrop {
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
