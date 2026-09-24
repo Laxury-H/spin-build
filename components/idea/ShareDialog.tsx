@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -111,13 +112,13 @@ export function ShareDialog({
         {/* Poster Card Preview */}
         <div
           ref={canvasContainerRef}
-          className="rounded-xl border border-line bg-surface p-2 flex items-center justify-center overflow-hidden aspect-[4/5] max-h-[440px]"
+          className=" border border-line bg-surface p-2 flex items-center justify-center overflow-hidden aspect-[4/5] max-h-[440px]"
         >
           {dataUrl ? (
             <img
               src={dataUrl}
               alt={idea.concept.name}
-              className="max-h-full w-auto object-contain rounded-lg border border-line shadow-lg"
+              className="max-h-full w-auto object-contain border border-line"
             />
           ) : (
             <div className="text-xs font-mono text-muted animate-pulse">
@@ -135,7 +136,7 @@ export function ShareDialog({
                 type="text"
                 readOnly
                 value={url}
-                className="w-full bg-surface-2 rounded-lg border border-line px-3 py-2 font-mono text-xs text-fg select-all outline-none"
+                className="w-full bg-surface-2 border border-line px-3 py-2 font-mono text-xs text-fg select-all outline-none"
               />
               <Button size="sm" variant="outline" onClick={handleCopyLink} className="shrink-0 font-mono">
                 {copiedLink ? "ĐÃ SAO CHÉP ✓" : "SAO CHÉP"}
@@ -145,7 +146,7 @@ export function ShareDialog({
 
           <div className="flex flex-col gap-2.5 pt-3 border-t border-line">
             <Button variant="solid" onClick={handleDownloadImage} className="font-bold">
-              📥 TẢI XUỐNG ẢNH POSTER (PNG)
+              TẢI XUỐNG ẢNH POSTER (PNG)
             </Button>
             <Button variant="outline" onClick={handleCopyText} className="font-mono text-xs">
               {copiedText ? "ĐÃ SAO CHÉP ✓" : "SAO CHÉP VĂN BẢN TÓM TẮT"}
@@ -161,3 +162,5 @@ export function ShareDialog({
     </Dialog>
   );
 }
+
+

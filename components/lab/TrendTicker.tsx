@@ -4,47 +4,45 @@ import { useSpin } from "@/lib/store";
 import { toast } from "@/lib/ui/toast";
 import type { Trend } from "@/types";
 
+/** Bottom marquee of live trends. Each item injects that trend into the next spin. */
 export function TrendTicker() {
-  const trends = useSpin((s) => s.trends);
+  const trends = useSpin((s) => s.trends.trends);
   const injectedTrend = useSpin((s) => s.injectedTrend);
   const injectTrend = useSpin((s) => s.injectTrend);
 
-  const list = trends.trends?.slice(0, 20) ?? [];
+  const list = trends.slice(0, 18);
   if (list.length === 0) return null;
 
-  const handleInject = (t: Trend) => {
+  const inject = (t: Trend) => {
     injectTrend(t);
-    toast(`INJECTED // ${t.title.toUpperCase()}`, {
-      detail: "LOCKED INTO YOUR NEXT SPIN",
-    });
+    toast(`Đã chọn // ${t.title.toUpperCase()}`, { detail: "Xu hướng này sẽ vào lần quay tới" });
   };
 
-  return (
-    <div className="w-full h-10 border-t border-line bg-surface flex items-center overflow-hidden shrink-0 group select-none">
-      <div className="flex items-center px-4 shrink-0 label text-muted border-r border-line bg-surface z-10">
-        <span className="w-2 h-2 rounded-full bg-fg mr-2 animate-pulse" />
-        <span>CULTURE PULSE</span>
-      </div>
+  const items = (copy: number) =>
+    list.map((t) => (
+      <button
+        key={`${copy}-${t.id}`}
+        type="button"
+        tabIndex={copy === 0 ? 0 : -1}
+        aria-hidden={copy === 0 ? undefined : true}
+        onClick={() => inject(t)}
+        className={`label shrink-0 px-5 transition-colors hover:text-fg ${
+          injectedTrend?.id === t.id ? "text-fg underline underline-offset-4" : "text-muted"
+        }`}
+        title={`Đưa “${t.title}” vào lần quay tới`}
+      >
+        {t.title}
+      </button>
+    ));
 
-      <div className="flex-1 overflow-x-auto no-scrollbar flex items-center whitespace-nowrap gap-4 px-4 font-mono text-xs text-muted">
-        {list.map((t) => {
-          const isInjected = injectedTrend?.id === t.id;
-          return (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => handleInject(t)}
-              className={`hover:text-fg hover:underline cursor-pointer transition-colors inline-flex items-center gap-1.5 ${
-                isInjected ? "text-fg font-bold underline" : ""
-              }`}
-              title={`Inject "${t.title}" into next spin`}
-            >
-              <span>{t.title.toUpperCase()}</span>
-              <span className="text-[10px] text-muted/60">({t.score})</span>
-              <span className="text-muted/40">/</span>
-            </button>
-          );
-        })}
+  return (
+    <div className="flex h-10 shrink-0 items-center border-t border-line">
+      <span className="label flex h-full shrink-0 items-center border-r border-line px-4 text-fg md:px-8">Đang nóng</span>
+      <div className="relative flex-1 overflow-hidden">
+        <div className="flex w-max animate-[ticker_80s_linear_infinite] hover:[animation-play-state:paused] motion-reduce:animate-none">
+          {items(0)}
+          {items(1)}
+        </div>
       </div>
     </div>
   );

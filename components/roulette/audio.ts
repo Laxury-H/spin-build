@@ -7,7 +7,9 @@ let audioCtx: AudioContext | null = null;
 
 function getAudioContext(): AudioContext | null {
   if (typeof window === "undefined") return null;
-  const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+  const AudioContextClass =
+    window.AudioContext ||
+    (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
   if (!AudioContextClass) return null;
   if (!audioCtx) {
     audioCtx = new AudioContextClass();
@@ -74,6 +76,37 @@ export function playSettle(): void {
 
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + 0.16);
+  } catch {
+    // Ignore audio failures
+  }
+}
+
+/**
+ * Mechanical hardware toggle click when locking or unlocking a DNA parameter.
+ */
+export function playLockClick(locked: boolean): void {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = "square";
+    const startFreq = locked ? 520 : 380;
+    const endFreq = locked ? 740 : 260;
+
+    osc.frequency.setValueAtTime(startFreq, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(endFreq, ctx.currentTime + 0.02);
+
+    gain.gain.setValueAtTime(0.08, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.03);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.035);
   } catch {
     // Ignore audio failures
   }

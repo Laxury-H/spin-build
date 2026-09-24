@@ -1,11 +1,19 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { dailyIdea } from "@/lib/generator";
 import { dailyPlan } from "@/lib/generator/daily";
 import { useSpin } from "@/lib/store";
 import { IdeaResult } from "@/components/idea/IdeaResult";
+
+function untilNextUtcMidnight(now: number): string {
+  const d = new Date(now);
+  const next = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1);
+  const s = Math.max(0, Math.floor((next - now) / 1000));
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${pad(Math.floor(s / 3600))}:${pad(Math.floor((s % 3600) / 60))}:${pad(s % 60)}`;
+}
 
 export default function DailyPage() {
   const router = useRouter();
@@ -13,39 +21,55 @@ export default function DailyPage() {
 
   const plan = useMemo(() => dailyPlan(), []);
   const idea = useMemo(() => dailyIdea(), []);
+  const number = String(plan.number).padStart(4, "0");
 
-  const handleOpenInLab = () => {
+  const [countdown, setCountdown] = useState<string | null>(null);
+  useEffect(() => {
+    const tick = () => setCountdown(untilNextUtcMidnight(Date.now()));
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const openInLab = () => {
     loadIdea(idea);
     router.push("/");
   };
 
-  const dayNumberPad = String(plan.number).padStart(4, "0");
-
   return (
-    <div className="flex-1 max-w-5xl mx-auto w-full p-4 md:p-8 flex flex-col gap-8">
-      {/* Header */}
-      <div className="flex flex-col gap-2 border-b border-line pb-4">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-mono text-muted uppercase">Ý TƯỞNG ĐỒNG BỘ TOÀN CẦU</span>
-          <span className="text-xs font-mono text-fg font-bold">
-            NGÀY: {plan.dateKey}
+    <main className="mx-auto flex w-full max-w-[1400px] flex-1 flex-col gap-10 px-4 py-8 md:px-8 md:py-12">
+      <header className="grid grid-cols-1 gap-8 border-b border-line pb-8 lg:grid-cols-12">
+        <div className="flex flex-col gap-3 lg:col-span-7">
+          <span className="label text-muted tracking-wider">DAILY SYNCHRONIZED SEED //</span>
+          <span className="tabular font-mono text-[clamp(4rem,14vw,11rem)] leading-[0.85] tracking-[-0.06em] font-bold">
+            {number}
           </span>
         </div>
-        <h1 className="text-3xl sm:text-5xl font-extrabold text-fg uppercase tracking-tight">
-          Ý TƯỞNG HÔM NAY #{dayNumberPad}
-        </h1>
-        <p className="text-sm text-muted max-w-xl leading-relaxed">
-          Mỗi ngày một ý tưởng độc đáo, được đồng bộ cho mọi người dùng trên toàn thế giới dựa trên xu hướng đang thịnh hành.
-        </p>
-      </div>
+        <div className="flex flex-col justify-end gap-6 lg:col-span-5">
+          <p className="display text-[clamp(2rem,4vw,3.6rem)] tracking-tight">
+            MỘT THẾ GIỚI.
+            <br />
+            MỘT HẠT GIỐNG.
+            <br />
+            24 GIỜ DUY NHẤT.
+          </p>
+          <dl className="label flex flex-wrap gap-x-6 gap-y-1 text-muted text-xs">
+            <div className="flex gap-2">
+              <dt>NGÀY UTC:</dt>
+              <dd className="text-fg font-mono">{plan.dateKey}</dd>
+            </div>
+            <div className="flex gap-2">
+              <dt>SEED MỚI SAU:</dt>
+              <dd className="tabular text-fg font-mono font-bold">{countdown ?? "--:--:--"}</dd>
+            </div>
+          </dl>
+          <p className="text-xs leading-5 text-muted">
+            Mọi kỹ sư và nhà sáng lập truy cập trong ngày hôm nay trên toàn cầu đều nhận được một hạt giống ý tưởng tất định giống hệt nhau.
+          </p>
+        </div>
+      </header>
 
-      {/* Idea Result View */}
-      <IdeaResult
-        idea={idea}
-        mode="view"
-        eyebrow={`Ý TƯỞNG NGÀY #${dayNumberPad}`}
-        onOpenInLab={handleOpenInLab}
-      />
-    </div>
+      <IdeaResult idea={idea} mode="view" eyebrow={`DAILY SEED // #${number}`} onOpenInLab={openInLab} />
+    </main>
   );
 }

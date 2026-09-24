@@ -15,6 +15,10 @@ interface CommandItem {
   action: () => void;
 }
 
+function getRandomChaosPercent(): number {
+  return Math.floor(Math.random() * 100);
+}
+
 export function CommandPalette() {
   const overlay = useOverlay();
   const router = useRouter();
@@ -35,9 +39,12 @@ export function CommandPalette() {
   // Focus input when opened
   useEffect(() => {
     if (isOpen) {
-      setQuery("");
-      setSelectedIndex(0);
-      setTimeout(() => inputRef.current?.focus(), 50);
+      const timer = setTimeout(() => {
+        setQuery("");
+        setSelectedIndex(0);
+        inputRef.current?.focus();
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [isOpen]);
 
@@ -110,7 +117,7 @@ export function CommandPalette() {
       description: "Clear all locks and randomize chaos",
       action: () => {
         clearLocks();
-        const randChaos = Math.floor(Math.random() * 100);
+        const randChaos = getRandomChaosPercent();
         setChaos(randChaos);
         executeSpin({ chaos: randChaos });
       },
@@ -228,11 +235,11 @@ export function CommandPalette() {
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-start justify-center pt-[15vh] px-4 animate-in fade-in duration-100"
+      className="fixed inset-0 z-50 bg-bg/80 flex items-start justify-center pt-[15vh] px-4"
       onClick={() => overlay.hide()}
     >
       <div
-        className="w-full max-w-xl bg-bg border border-line-strong shadow-2xl overflow-hidden flex flex-col"
+        className="w-full max-w-xl bg-bg border border-line-strong overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search Header */}

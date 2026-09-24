@@ -20,7 +20,8 @@ export class CuratedTrendProvider implements TrendProvider<Trend[]> {
     };
   }
 
-  async fetchTrends(_ctx: { region: Region; signal: AbortSignal }): Promise<Trend[]> {
+  async fetchTrends(ctx: { region: Region; signal: AbortSignal }): Promise<Trend[]> {
+    if (ctx.signal?.aborted) return [];
     return FALLBACK_TRENDS;
   }
 

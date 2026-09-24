@@ -67,9 +67,9 @@ export function BuildBriefDialog({
             variant="solid"
             size="sm"
             onClick={handleCopyPrompt}
-            className="font-bold shadow-md"
+            className="font-bold"
           >
-            {copiedPrompt ? "ĐÃ SAO CHÉP PROMPT ✓" : "⚡ SAO CHÉP PROMPT CHO AI"}
+            {copiedPrompt ? "ĐÃ SAO CHÉP PROMPT ✓" : "SAO CHÉP PROMPT CHO AI"}
           </Button>
         </div>
       }

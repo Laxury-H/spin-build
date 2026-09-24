@@ -18,16 +18,9 @@ export function RevealOverlay({
   const sector = SECTOR_BY_ID[idea.dna.domain.sector];
 
   useEffect(() => {
-    // Step 0: Initial sector expansion
-    const t1 = setTimeout(() => setStep(1), 350);
-    // Step 1: Genes decoding
-    const t2 = setTimeout(() => setStep(2), 750);
-    // Step 2: Stamp in & finish
-    const t3 = setTimeout(() => {
-      setStep(3);
-      onComplete();
-    }, 1500);
-
+    const t1 = setTimeout(() => setStep(1), 380); // sector stamped, genes start decoding
+    const t2 = setTimeout(() => setStep(2), 1100); // idea number stamps in
+    const t3 = setTimeout(onComplete, 1650);
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
@@ -35,65 +28,43 @@ export function RevealOverlay({
     };
   }, [onComplete]);
 
+  const rows: [string, string][] = [
+    ["Đối tượng", idea.dna.target.short],
+    ["Cơ chế", idea.dna.mechanic.short],
+    ["Xu hướng", idea.dna.trend.title.toUpperCase()],
+    ["Điểm dị", idea.dna.chaos.short],
+    ["Ràng buộc", idea.dna.constraint.short],
+  ];
+
   return (
     <div
       onClick={onSkip}
-      className="absolute inset-0 z-30 bg-bg/95 backdrop-blur-sm flex flex-col items-center justify-center p-6 cursor-pointer select-none animate-in fade-in duration-150"
+      role="status"
+      aria-live="polite"
+      className="absolute inset-0 z-30 flex cursor-pointer select-none flex-col items-center justify-center bg-bg px-4"
     >
-      <div className="flex flex-col items-center text-center max-w-xl gap-4">
-        {/* Sector Stamped Headline */}
-        <div className="flex flex-col items-center gap-1">
-          <span className="label text-muted tracking-widest text-xs">
-            SECTOR LOCKED // 0{sector?.index || 1}
-          </span>
-          <h2 className="display text-5xl sm:text-7xl font-extrabold uppercase tracking-tighter text-fg animate-in zoom-in-95 duration-200">
-            {sector?.label || "SYSTEM"}
-          </h2>
-          <span className="font-mono text-sm font-semibold tracking-wider text-muted uppercase">
-            {idea.dna.domain.label}
-          </span>
+      <div className="flex w-full max-w-md flex-col items-center gap-6 text-center">
+        <div className="flex flex-col items-center gap-3">
+          <span className="label text-muted">Dừng tại // {String(sector?.index ?? 1).padStart(2, "0")}</span>
+          <h2 className="display enter text-[clamp(2.5rem,7vw,5rem)]">{sector?.label ?? "—"}</h2>
+          <span className="label text-muted">{idea.dna.domain.short}</span>
         </div>
 
-        {/* Gene Scramble Feed */}
-        {step >= 1 && (
-          <div className="w-full max-w-sm flex flex-col divide-y divide-line/40 border border-line bg-surface p-3 mt-4 text-xs font-mono text-left animate-in fade-in slide-in-from-bottom-2 duration-150">
-            <div className="py-1.5 flex justify-between">
-              <span className="text-muted">TARGET</span>
-              <span className="text-fg font-semibold">
-                <ScrambleText text={idea.dna.target.short} />
-              </span>
+        <dl className={`w-full border-t border-line text-left transition-opacity duration-150 ${step >= 1 ? "opacity-100" : "opacity-0"}`}>
+          {rows.map(([k, v], i) => (
+            <div key={k} className="label flex justify-between gap-4 border-b border-line py-2">
+              <dt className="text-muted">{k}</dt>
+              <dd className="truncate text-fg">
+                {step >= 1 ? <ScrambleText text={v} delay={i * 120} duration={380} /> : null}
+              </dd>
             </div>
-            <div className="py-1.5 flex justify-between">
-              <span className="text-muted">MECHANIC</span>
-              <span className="text-fg font-semibold">
-                <ScrambleText text={idea.dna.mechanic.short} />
-              </span>
-            </div>
-            <div className="py-1.5 flex justify-between">
-              <span className="text-muted">TREND</span>
-              <span className="text-fg font-semibold truncate max-w-[200px]">
-                <ScrambleText text={idea.dna.trend.title.toUpperCase()} />
-              </span>
-            </div>
-            <div className="py-1.5 flex justify-between">
-              <span className="text-muted">CHAOS</span>
-              <span className="text-fg font-semibold">
-                <ScrambleText text={idea.dna.chaos.short} />
-              </span>
-            </div>
-            <div className="py-1.5 flex justify-between">
-              <span className="text-muted">CONSTRAINT</span>
-              <span className="text-fg font-semibold">
-                <ScrambleText text={idea.dna.constraint.short} />
-              </span>
-            </div>
-          </div>
-        )}
+          ))}
+        </dl>
 
-        {/* Footer skip prompt */}
-        <div className="mt-6 text-[10px] font-mono text-muted tracking-widest uppercase">
-          CLICK OR PRESS SPACE TO SKIP REVEAL
-        </div>
+        <span className={`label text-fg transition-opacity ${step >= 2 ? "opacity-100" : "opacity-0"}`}>
+          Đã tạo ý tưởng // #{idea.number}
+        </span>
+        <span className="label text-subtle">Bấm hoặc SPACE để bỏ qua</span>
       </div>
     </div>
   );

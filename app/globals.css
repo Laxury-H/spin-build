@@ -7,23 +7,16 @@
  * so the black↔white inversion flash (html[data-invert]) works everywhere.
  */
 :root {
-  --bg: #090a10;
-  --fg: #f8fafc;
-  --surface: #12141e;
-  --surface-2: #1b1e2e;
-  --surface-hover: #22263a;
-  --muted: #94a3b8;
-  --subtle: #64748b;
-  --faint: #334155;
-  --line: rgba(255, 255, 255, 0.08);
-  --line-strong: rgba(255, 255, 255, 0.22);
-
-  --accent-domain: #818cf8;
-  --accent-target: #fb7185;
-  --accent-mechanic: #34d399;
-  --accent-trend: #fbbf24;
-  --accent-chaos: #c084fc;
-  --accent-constraint: #38bdf8;
+  --bg: #000000;
+  --fg: #ffffff;
+  --surface: #0a0a0a;
+  --surface-2: #141414;
+  --surface-hover: #1c1c1c;
+  --muted: #8c8c8c;
+  --subtle: #5c5c5c;
+  --faint: #2a2a2a;
+  --line: rgb(255 255 255 / 0.14);
+  --line-strong: rgb(255 255 255 / 0.36);
 
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
@@ -33,16 +26,16 @@
 }
 
 html[data-invert] {
-  --bg: #f8fafc;
-  --fg: #0f172a;
-  --surface: #ffffff;
-  --surface-2: #f1f5f9;
-  --surface-hover: #e2e8f0;
-  --muted: #64748b;
-  --subtle: #94a3b8;
-  --faint: #cbd5e1;
-  --line: rgba(0, 0, 0, 0.08);
-  --line-strong: rgba(0, 0, 0, 0.25);
+  --bg: #ffffff;
+  --fg: #000000;
+  --surface: #f5f5f5;
+  --surface-2: #ebebeb;
+  --surface-hover: #e0e0e0;
+  --muted: #6b6b6b;
+  --subtle: #9a9a9a;
+  --faint: #d6d6d6;
+  --line: rgb(0 0 0 / 0.14);
+  --line-strong: rgb(0 0 0 / 0.4);
   color-scheme: light;
 }
 
@@ -70,13 +63,8 @@ html[data-invert] {
 
 html,
 body {
-  background-color: var(--bg);
+  background: var(--bg);
   color: var(--fg);
-  background-image: 
-    radial-gradient(ellipse 90% 50% at 50% 0%, rgba(99, 102, 241, 0.12) 0%, transparent 65%),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-    linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
-  background-size: 100% 100%, 48px 48px, 48px 48px;
 }
 
 body {
@@ -112,7 +100,7 @@ body {
   font-family: var(--font-sans);
   font-weight: 600;
   letter-spacing: -0.045em;
-  line-height: 0.88;
+  line-height: 0.95;
   text-transform: uppercase;
 }
 
@@ -146,6 +134,63 @@ body {
 
 dialog::backdrop {
   background: color-mix(in srgb, var(--bg) 82%, transparent);
+}
+
+/* One restrained entrance: 10px rise + fade. */
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility enter {
+  animation: enter 320ms var(--ease-out) both;
+}
+
+@keyframes ticker {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Range input: 1px track, square thumb. */
+input[type="range"].range {
+  appearance: none;
+  height: 20px;
+  background: transparent;
+  cursor: pointer;
+}
+input[type="range"].range::-webkit-slider-runnable-track {
+  height: 1px;
+  background: var(--line-strong);
+}
+input[type="range"].range::-moz-range-track {
+  height: 1px;
+  background: var(--line-strong);
+}
+input[type="range"].range::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  margin-top: -7px;
+  background: var(--fg);
+  border: 0;
+  border-radius: 0;
+}
+input[type="range"].range::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  background: var(--fg);
+  border: 0;
+  border-radius: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {

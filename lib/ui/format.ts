@@ -1,16 +1,16 @@
 import type { Idea } from "@/types";
 
-/** "2 MIN AGO", "JUST NOW", "3 H AGO", "12 SEP". Uppercase for mono labels. */
+/** "vừa xong", "5 phút trước", "3 giờ trước", "12 thg 9". */
 export function timeAgo(ts: number, now: number = Date.now()): string {
   const s = Math.max(0, Math.round((now - ts) / 1000));
-  if (s < 45) return "JUST NOW";
+  if (s < 45) return "vừa xong";
   const m = Math.round(s / 60);
-  if (m < 60) return `${m} MIN AGO`;
+  if (m < 60) return `${m} phút trước`;
   const h = Math.round(m / 60);
-  if (h < 24) return `${h} H AGO`;
+  if (h < 24) return `${h} giờ trước`;
   const d = Math.round(h / 24);
-  if (d < 7) return `${d} D AGO`;
-  return new Date(ts).toLocaleDateString("en-GB", { day: "2-digit", month: "short" }).toUpperCase();
+  if (d < 7) return `${d} ngày trước`;
+  return new Date(ts).toLocaleDateString("vi-VN", { day: "numeric", month: "short" });
 }
 
 /** "PRODUCTIVITY × STUDENTS × MULTIPLAYER × AI AGENTS × HOSTILE UX × NO LOGIN" */

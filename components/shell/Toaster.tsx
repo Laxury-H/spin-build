@@ -17,7 +17,7 @@ export function Toaster() {
       {toasts.map((t) => (
         <div
           key={t.id}
-          className="pointer-events-auto max-w-md w-full bg-bg border border-line-strong p-3 shadow-2xl flex items-center justify-between gap-4 animate-in slide-in-from-bottom-2 fade-in duration-150"
+          className="pointer-events-auto max-w-md w-full bg-bg border border-line-strong p-3 flex items-center justify-between gap-4"
         >
           <div className="flex flex-col">
             <span className="font-mono text-xs font-bold uppercase tracking-wider text-fg">

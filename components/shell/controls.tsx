@@ -1,97 +1,135 @@
 "use client";
 
 import { useSpin } from "@/lib/store";
-import { chaosBand, REGIONS, type Region } from "@/types";
-import { SoundIcon } from "@/components/ui/icons";
+import { chaosBand, CHAOS_BANDS, REGIONS } from "@/types";
+import { cn } from "@/lib/ui/cn";
 
-export function ChaosSlider({
-  className = "",
-  compact = false,
-}: {
-  className?: string;
-  compact?: boolean;
-}) {
+/** Vietnamese copy for the five chaos bands (types/CHAOS_BANDS order). */
+const BAND_VI: Record<string, string> = {
+  SANE: "Công cụ thực dụng, dùng được ngay.",
+  CREATIVE: "Side project có cá tính.",
+  EXPERIMENTAL: "Sản phẩm thử nghiệm.",
+  WEIRD: "App internet kỳ quặc.",
+  CURSED: "Bị nguyền, nhưng biết đâu lại hay.",
+};
+
+const PRESETS = [
+  { label: "Thực tế", value: 15 },
+  { label: "Cân bằng", value: 50 },
+  { label: "Siêu dị", value: 90 },
+];
+
+/** SANE ──●── UNHINGED. Native range input (keyboard + screen reader ready). */
+export function ChaosSlider({ className, compact = false }: { className?: string; compact?: boolean }) {
   const chaos = useSpin((s) => s.chaos);
   const setChaos = useSpin((s) => s.setChaos);
   const band = chaosBand(chaos);
 
+  const input = (
+    <input
+      type="range"
+      min={0}
+      max={100}
+      step={1}
+      value={chaos}
+      onChange={(e) => setChaos(Number(e.target.value))}
+      className="range w-full"
+      aria-label="Độ dị"
+      aria-valuetext={`${chaos} phần trăm, ${band.label}`}
+    />
+  );
+
   if (compact) {
     return (
-      <div className={`flex items-center gap-2 label ${className}`}>
-        <span className="text-muted">CHAOS</span>
-        <span className="font-mono tabular-nums text-fg">{chaos}%</span>
-        <input
-          type="range"
-          min={0}
-          max={100}
-          step={1}
-          value={chaos}
-          onChange={(e) => setChaos(Number(e.target.value))}
-          className="w-24 accent-fg cursor-pointer"
-          aria-label="Chaos slider"
-          aria-valuetext={`${chaos} percent, ${band.label}`}
-        />
+      <div className={cn("label flex items-center gap-3", className)}>
+        <span className="text-muted">Độ dị</span>
+        <span className="tabular w-9 text-fg">{chaos}%</span>
+        <div className="w-28">{input}</div>
       </div>
     );
   }
 
   return (
-    <div className={`flex flex-col gap-2 p-3 bg-surface border border-line ${className}`}>
-      <div className="flex items-center justify-between label">
-        <span className="text-muted tracking-wider">CHAOS LEVEL</span>
-        <span className="font-mono text-sm tabular-nums text-fg font-bold">
+    <div className={cn("flex flex-col gap-3", className)}>
+      <div className="flex items-end justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <span className="label text-muted">Độ dị</span>
+          <span className="label text-fg">{band.label}</span>
+        </div>
+        <span
+          className={cn(
+            "tabular px-1 font-sans text-4xl font-semibold leading-none tracking-[-0.04em]",
+            chaos >= 80 && "bg-fg text-bg",
+          )}
+        >
           {chaos}%
         </span>
       </div>
 
-      <div className="flex items-center justify-between text-xs text-muted">
-        <span className="font-semibold text-fg tracking-wide uppercase">{band.label}</span>
-        <span className="text-[11px] text-muted truncate max-w-[180px]">{band.description}</span>
+      <div className="relative">
+        {input}
+        {CHAOS_BANDS.slice(1).map((b) => (
+          <span
+            key={b.min}
+            aria-hidden="true"
+            className="pointer-events-none absolute top-1/2 h-2 w-px -translate-y-1/2 bg-line-strong"
+            style={{ left: `calc(7px + (100% - 14px) * ${b.min / 100})` }}
+          />
+        ))}
       </div>
 
-      <div className="relative py-1">
-        <input
-          type="range"
-          min={0}
-          max={100}
-          step={1}
-          value={chaos}
-          onChange={(e) => setChaos(Number(e.target.value))}
-          className="w-full accent-fg cursor-pointer bg-line h-1 rounded-none"
-          aria-label="Chaos level"
-          aria-valuetext={`${chaos} percent, ${band.label}`}
-        />
+      <div className="label flex justify-between text-subtle">
+        <span>Sane</span>
+        <span>Unhinged</span>
       </div>
 
-      <div className="flex items-center justify-between text-[10px] font-mono text-muted tracking-widest uppercase">
-        <span>SANE</span>
-        <span className="text-subtle">EXPERIMENTAL</span>
-        <span>UNHINGED</span>
+      <p className="text-xs leading-5 text-muted">{BAND_VI[band.label] ?? band.description}</p>
+
+      <div className="grid grid-cols-3 border border-line" role="group" aria-label="Mức độ dị có sẵn">
+        {PRESETS.map((p, i) => {
+          const active = Math.abs(chaos - p.value) <= 10;
+          return (
+            <button
+              key={p.value}
+              type="button"
+              onClick={() => setChaos(p.value)}
+              aria-pressed={active}
+              className={cn(
+                "label h-9 transition-colors",
+                i > 0 && "border-l border-line",
+                active ? "bg-fg text-bg" : "text-muted hover:text-fg",
+              )}
+            >
+              {p.label}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
 }
 
-export function RegionToggle({ className = "" }: { className?: string }) {
+export function RegionToggle({ className }: { className?: string }) {
   const region = useSpin((s) => s.region);
   const setRegion = useSpin((s) => s.setRegion);
 
   return (
-    <div className={`inline-flex items-center rounded-lg bg-surface-2 p-0.5 border border-line text-xs font-mono ${className}`}>
-      {REGIONS.map((r) => {
+    <div className={cn("label inline-flex border border-line", className)} role="group" aria-label="Khu vực xu hướng">
+      {REGIONS.map((r, i) => {
         const active = region === r;
         return (
           <button
             key={r}
             type="button"
             onClick={() => setRegion(r)}
-            className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
-              active
-                ? "bg-fg text-bg font-bold shadow-xs"
-                : "text-muted hover:text-fg"
-            }`}
+            aria-pressed={active}
+            className={cn(
+              "h-7 px-2.5 transition-colors",
+              i > 0 && "border-l border-line",
+              active ? "bg-fg text-bg" : "text-muted hover:text-fg",
+            )}
           >
-            {r === "VN" ? "Việt Nam 🇻🇳" : "Toàn cầu 🌐"}
+            {r === "VN" ? "Việt Nam" : "Toàn cầu"}
           </button>
         );
       })}
@@ -99,7 +137,7 @@ export function RegionToggle({ className = "" }: { className?: string }) {
   );
 }
 
-export function AudioToggle({ className = "" }: { className?: string }) {
+export function AudioToggle({ className }: { className?: string }) {
   const audio = useSpin((s) => s.audio);
   const setAudio = useSpin((s) => s.setAudio);
 
@@ -107,39 +145,28 @@ export function AudioToggle({ className = "" }: { className?: string }) {
     <button
       type="button"
       onClick={() => setAudio(!audio)}
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-mono cursor-pointer transition-all ${
-        audio
-          ? "border-line-strong bg-surface-2 text-fg font-medium"
-          : "border-line text-muted hover:text-fg hover:bg-surface"
-      } ${className}`}
       aria-pressed={audio}
+      className={cn("label transition-colors", audio ? "text-fg" : "text-muted hover:text-fg", className)}
     >
-      <SoundIcon on={audio} className="w-3.5 h-3.5" />
-      <span>{audio ? "Âm thanh: Bật" : "Âm thanh: Tắt"}</span>
+      {audio ? "[ Bật ]" : "[ Tắt ]"}
     </button>
   );
 }
 
-export function TrendEngineStatus({ className = "" }: { className?: string }) {
+export function TrendEngineStatus({ className, bare = false }: { className?: string; bare?: boolean }) {
   const trendSync = useSpin((s) => s.trendSync);
-  const trends = useSpin((s) => s.trends);
+  const status = useSpin((s) => s.trends.status);
 
-  let statusText = "ONLINE";
-  let statusDot = "bg-fg";
+  const text =
+    trendSync === "syncing"
+      ? "Đang đồng bộ"
+      : status === "ONLINE"
+        ? "Online"
+        : status === "PARTIAL"
+          ? "Một phần"
+          : "Bộ nhớ đệm";
 
-  if (trendSync === "syncing") {
-    statusText = "SYNCING";
-    statusDot = "bg-muted animate-pulse";
-  } else if (trends.status === "PARTIAL") {
-    statusText = "PARTIAL";
-  } else if (trends.status === "OFFLINE_CACHE") {
-    statusText = "OFFLINE CACHE";
-  }
+  if (bare) return <span className={className}>{text}</span>;
 
-  return (
-    <div className={`inline-flex items-center gap-2 label text-muted ${className}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${statusDot}`} />
-      <span>TREND ENGINE: {statusText}</span>
-    </div>
-  );
+  return <span className={cn("label text-muted", className)}>Trend engine: {text}</span>;
 }

@@ -22,62 +22,63 @@ const curatedProvider = new CuratedTrendProvider();
 
 const LIVE_PROVIDERS: TrendProvider[] = [techProvider, searchProvider];
 
+const heatRank = { HOT: 3, RISING: 2, STEADY: 1 } as const;
+
 /** Merge duplicates across sources based on title slug and token similarity. */
 function mergeCrossSource(trends: Trend[]): Trend[] {
   const merged: Trend[] = [];
-  const seenSlugs = new Map<string, Trend>();
 
   for (const t of trends) {
     const slug = slugify(t.title);
-    const existing = seenSlugs.get(slug);
-
-    if (existing) {
-      // Merge source into existing
-      if (!existing.sources) existing.sources = [existing.source];
-      if (!existing.sources.includes(t.source)) existing.sources.push(t.source);
-      // Bump score slightly for multi-source confirmation
-      existing.score = Math.min(99, existing.score + 5);
-      continue;
-    }
-
-    // Check token similarity against already merged trends
     const tokens = significantTokens(t.title);
-    let matchedExisting: Trend | null = null;
 
-    if (tokens.length >= 2) {
-      for (const m of merged) {
-        const mTokens = significantTokens(m.title);
-        const common = tokens.filter((tok) => mTokens.includes(tok));
-        if (common.length >= 2 && common.length >= Math.min(tokens.length, mTokens.length) * 0.7) {
-          matchedExisting = m;
-          break;
-        }
+    let matchIdx = -1;
+    for (let i = 0; i < merged.length; i++) {
+      const existing = merged[i];
+      if (slugify(existing.title) === slug) {
+        matchIdx = i;
+        break;
+      }
+      const existingTokens = significantTokens(existing.title);
+      const overlap = tokens.filter((tok) => existingTokens.includes(tok));
+      if (overlap.length >= 2 && overlap.length / Math.min(tokens.length, existingTokens.length) > 0.6) {
+        matchIdx = i;
+        break;
       }
     }
 
-    if (matchedExisting) {
-      if (!matchedExisting.sources) matchedExisting.sources = [matchedExisting.source];
-      if (!matchedExisting.sources.includes(t.source)) matchedExisting.sources.push(t.source);
-      matchedExisting.score = Math.min(99, matchedExisting.score + 4);
-      continue;
-    }
+    if (matchIdx !== -1) {
+      const existing = merged[matchIdx];
+      const combinedScore = Math.min(100, existing.score + t.score * 0.4);
+      const sources = Array.from(new Set([...(existing.sources ?? [existing.source]), ...(t.sources ?? [t.source])]));
+      const r1 = existing.heat ? heatRank[existing.heat] ?? 1 : 1;
+      const r2 = t.heat ? heatRank[t.heat] ?? 1 : 1;
+      const maxRank = Math.max(r1, r2);
+      const heat: "HOT" | "RISING" | "STEADY" = maxRank === 3 ? "HOT" : maxRank === 2 ? "RISING" : "STEADY";
 
-    seenSlugs.set(slug, t);
-    merged.push({ ...t, sources: [t.source] });
+      merged[matchIdx] = {
+        ...existing,
+        score: Math.round(combinedScore),
+        sources,
+        heat,
+      };
+    } else {
+      merged.push({ ...t, sources: [t.source] });
+    }
   }
 
-  // Sort by score descending
+  // Sort descending by score
   merged.sort((a, b) => b.score - a.score);
   return merged;
 }
 
 /**
- * Aggregates live trends for the given region.
- * Guaranteed never to throw; always returns ≥ 24 valid trends.
+ * Fetch a unified snapshot for a given region.
+ * Uses cached data if fresh; falls back to curated baseline if live sources fail.
  */
-export async function getTrendSnapshot(
+export async function fetchSnapshot(
   region: Region,
-  opts: { force?: boolean } = {},
+  opts: { force?: boolean } = {}
 ): Promise<TrendSnapshot> {
   const now = Date.now();
   const cached = cache.get(region);
@@ -109,7 +110,6 @@ export async function getTrendSnapshot(
     }
   });
 
-  // Always fetch curated baseline
   const curatedPromise = (async () => {
     try {
       const raw = await curatedProvider.fetchTrends({ region, signal: new AbortController().signal });
@@ -132,6 +132,14 @@ export async function getTrendSnapshot(
       liveSuccessCount++;
       allLiveTrends.push(...res.value.items);
     }
+  }
+
+  // Fallback to stale cache if all live providers fail but cache is within stale TTL
+  if (liveSuccessCount === 0 && cached && now - cached.cachedAt < STALE_TTL_MS) {
+    return {
+      ...cached.snapshot,
+      status: "OFFLINE_CACHE",
+    };
   }
 
   // Deduplicate and rank live trends
@@ -171,3 +179,5 @@ export async function getTrendSnapshot(
   cache.set(region, { snapshot, cachedAt: now });
   return snapshot;
 }
+
+export const getTrendSnapshot = fetchSnapshot;

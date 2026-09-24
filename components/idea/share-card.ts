@@ -53,11 +53,11 @@ export async function renderShareCard(idea: Idea, opts: ShareCardOptions = {}): 
 
   // Concept Name (auto-fitting)
   ctx.fillStyle = "#ffffff";
-  let fontSize = 100;
+  const fontSize = 100;
   ctx.font = `700 ${fontSize}px Geist, system-ui, sans-serif`;
 
   const words = idea.concept.name.toUpperCase().split(" ");
-  let lines: string[] = [];
+  const lines: string[] = [];
   let currentLine = "";
 
   for (const word of words) {

@@ -1,164 +1,213 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSpin } from "@/lib/store";
+import { useHydrated } from "@/lib/hooks";
 import { fuseIdeas, spinIdea } from "@/lib/generator";
+import { flashInvert } from "@/lib/ui/invert";
+import { prefersReducedMotion } from "@/lib/ui/motion";
+import { cn } from "@/lib/ui/cn";
 import type { Idea } from "@/types";
 import { IdeaResult } from "@/components/idea/IdeaResult";
 import { Button } from "@/components/ui/Button";
 
+const EXAMPLES = [
+  "Học ngoại ngữ × Hẹn hò",
+  "Khám phá âm nhạc × Game định vị",
+  "Tài chính cá nhân × Đấu trường Multiplayer",
+  "Ẩm thực địa phương × Game giải đố",
+];
+
 export default function FusePage() {
   const router = useRouter();
-  const history = useSpin((s) => s.history);
+  const current = useSpin((s) => s.current);
+  const chaos = useSpin((s) => s.chaos);
+  const region = useSpin((s) => s.region);
+  const trendPool = useSpin((s) => s.trends.trends);
   const loadIdea = useSpin((s) => s.loadIdea);
 
-  const [parentA, setParentA] = useState<Idea | null>(() => {
-    return history[0]?.idea ?? spinIdea({ chaos: 40, region: "GLOBAL" });
-  });
+  const roll = () => spinIdea({ chaos, region, trendPool });
 
-  const [parentB, setParentB] = useState<Idea | null>(() => {
-    return history[1]?.idea ?? spinIdea({ chaos: 70, region: "GLOBAL" });
-  });
+  // Default parents are rolled only on the client: random seeds must not differ between server and client HTML.
+  const hydrated = useHydrated();
+  const defaults = useMemo(() => {
+    if (!hydrated) return null;
+    const h = useSpin.getState().history;
+    return {
+      a: h[0]?.idea ?? spinIdea({ chaos: 40, region: "GLOBAL" }),
+      b: h[1]?.idea ?? spinIdea({ chaos: 70, region: "GLOBAL" }),
+    };
+  }, [hydrated]);
 
-  const [fusedResult, setFusedResult] = useState<Idea | null>(null);
+  const [pickA, setA] = useState<Idea | null>(null);
+  const [pickB, setB] = useState<Idea | null>(null);
+  const a = pickA ?? defaults?.a ?? null;
+  const b = pickB ?? defaults?.b ?? null;
+  const [fused, setFused] = useState<Idea | null>(null);
+  const [merging, setMerging] = useState(false);
 
-  const handleRollRandomA = () => {
-    setParentA(spinIdea({ chaos: Math.floor(Math.random() * 80) + 10, region: "GLOBAL" }));
+  const fuse = () => {
+    if (!a || !b) return;
+    const result = fuseIdeas(a, b);
+    if (prefersReducedMotion()) {
+      setFused(result);
+      return;
+    }
+    setFused(null);
+    setMerging(true);
+    setTimeout(() => {
+      flashInvert(140);
+      setFused(result);
+      setMerging(false);
+    }, 520);
   };
 
-  const handleRollRandomB = () => {
-    setParentB(spinIdea({ chaos: Math.floor(Math.random() * 80) + 10, region: "GLOBAL" }));
-  };
-
-  const handleFuse = () => {
-    if (!parentA || !parentB) return;
-    const hybrid = fuseIdeas(parentA, parentB);
-    setFusedResult(hybrid);
-  };
-
-  const handleOpenInLab = () => {
-    if (!fusedResult) return;
-    loadIdea(fusedResult);
+  const openInLab = () => {
+    if (!fused) return;
+    loadIdea(fused);
     router.push("/");
   };
 
   return (
-    <div className="flex-1 max-w-5xl mx-auto w-full p-4 md:p-8 flex flex-col gap-8">
-      {/* Header */}
-      <div className="flex flex-col gap-2 border-b border-line pb-4">
-        <span className="text-xs font-mono text-muted uppercase">PHÒNG THÍ NGHIỆM LAI TẠO Ý TƯỞNG</span>
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-fg uppercase tracking-tight">
-          GHÉP 2 Ý TƯỞNG (HYBRID)
+    <main className="mx-auto flex w-full max-w-[1400px] flex-1 flex-col gap-10 px-4 py-8 md:px-8 md:py-12">
+      <header className="flex flex-col gap-4">
+        <span className="label text-muted">PHÒNG THÍ NGHIỆM LAI TẠO // FUSION CHAMBER</span>
+        <h1 className="display text-[clamp(2.6rem,7vw,6.5rem)] tracking-tight">
+          A × B
+          <br />= HYBRID MỚI.
         </h1>
-        <p className="text-sm text-muted max-w-2xl leading-relaxed">
-          Kết hợp bộ gen của 2 sản phẩm: lấy <strong className="text-fg">Lĩnh vực & Khách hàng</strong> từ Ý tưởng A, ghép với <strong className="text-fg">Cơ chế & Yếu tố đột phá</strong> từ Ý tưởng B để tạo ra sản phẩm lai hoàn toàn mới.
+        <p className="max-w-[65ch] text-sm leading-relaxed text-muted">
+          Kế thừa Lĩnh vực & Đối tượng từ ý tưởng A, phối ngẫu cùng Cơ chế & Biến số Chaos từ ý tưởng B.
+          Hai hạt giống va chạm để tổng hợp nên một đột phá độc bản.
         </p>
-      </div>
+      </header>
 
-      {/* Parents Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
-        {/* Parent A */}
-        <div className="p-5 rounded-2xl border border-line bg-surface/90 flex flex-col justify-between gap-4">
-          <div className="flex items-center justify-between border-b border-line pb-2.5">
-            <span className="text-xs font-mono font-bold text-indigo-400">
-              Ý TƯỞNG A (LĨNH VỰC & KHÁCH HÀNG)
-            </span>
-            <Button size="sm" variant="ghost" onClick={handleRollRandomA} className="text-xs font-mono">
-              🎲 ĐỔI NGẪU NHIÊN
-            </Button>
+      {a && b ? (
+        <div className="grid grid-cols-1 items-stretch gap-4 md:grid-cols-[1fr_auto_1fr]">
+          <Parent
+            tag="A"
+            idea={a}
+            detail={`${a.dna.domain.short} × ${a.dna.target.short}`}
+            merging={merging}
+            side="left"
+            onReroll={() => setA(roll())}
+            onUseCurrent={
+              current && current.id !== a.id ? () => setA(current) : undefined
+            }
+          />
+          <div
+            className="display flex items-center justify-center text-5xl text-subtle"
+            aria-hidden="true"
+          >
+            ×
           </div>
-
-          {parentA ? (
-            <div className="flex flex-col gap-2">
-              <span className="font-mono text-xs text-muted">
-                SEED: #{parentA.recipe.seed}
-              </span>
-              <h3 className="font-bold text-xl text-fg">
-                {parentA.concept.name}
-              </h3>
-              <p className="text-xs text-muted line-clamp-3 leading-relaxed">
-                &ldquo;{parentA.concept.pitch}&rdquo;
-              </p>
-            </div>
-          ) : (
-            <div className="p-8 text-center text-xs text-muted font-mono">
-              CHỌN HOẶC QUAY Ý TƯỞNG A
-            </div>
-          )}
-
-          <div className="font-mono text-xs text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 px-3 py-1.5 rounded-lg truncate">
-            {parentA?.dna.domain.label} × {parentA?.dna.target.label}
-          </div>
+          <Parent
+            tag="B"
+            idea={b}
+            detail={`${b.dna.mechanic.short} × ${b.dna.chaos.short}`}
+            merging={merging}
+            side="right"
+            onReroll={() => setB(roll())}
+            onUseCurrent={
+              current && current.id !== b.id ? () => setB(current) : undefined
+            }
+          />
         </div>
-
-        {/* Parent B */}
-        <div className="p-5 rounded-2xl border border-line bg-surface/90 flex flex-col justify-between gap-4">
-          <div className="flex items-center justify-between border-b border-line pb-2.5">
-            <span className="text-xs font-mono font-bold text-emerald-400">
-              Ý TƯỞNG B (CƠ CHẾ & ĐỘT PHÁ)
-            </span>
-            <Button size="sm" variant="ghost" onClick={handleRollRandomB} className="text-xs font-mono">
-              🎲 ĐỔI NGẪU NHIÊN
-            </Button>
-          </div>
-
-          {parentB ? (
-            <div className="flex flex-col gap-2">
-              <span className="font-mono text-xs text-muted">
-                SEED: #{parentB.recipe.seed}
-              </span>
-              <h3 className="font-bold text-xl text-fg">
-                {parentB.concept.name}
-              </h3>
-              <p className="text-xs text-muted line-clamp-3 leading-relaxed">
-                &ldquo;{parentB.concept.pitch}&rdquo;
-              </p>
-            </div>
-          ) : (
-            <div className="p-8 text-center text-xs text-muted font-mono">
-              CHỌN HOẶC QUAY Ý TƯỞNG B
-            </div>
-          )}
-
-          <div className="font-mono text-xs text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-lg truncate">
-            {parentB?.dna.mechanic.short} × {parentB?.dna.chaos.short}
-          </div>
+      ) : (
+        <div
+          className="grid h-72 grid-cols-1 gap-4 md:grid-cols-2"
+          aria-busy="true"
+        >
+          <div className="border border-line bg-surface" />
+          <div className="border border-line bg-surface" />
         </div>
-      </div>
+      )}
 
-      {/* Fuse Button */}
-      <div className="flex justify-center">
+      <div className="flex flex-col items-center gap-4">
         <Button
           variant="solid"
           size="lg"
-          onClick={handleFuse}
-          className="px-8 py-3.5 text-base font-extrabold tracking-tight shadow-xl"
+          onClick={fuse}
+          disabled={merging || !a || !b}
+          className="min-w-64 font-bold tracking-wider"
         >
-          🧬 TẠO Ý TƯỞNG LAI (FUSE) →
+          {fused ? "LAI TẠO LẠI (RE-FUSE)" : "KÍCH HOẠT LAI TẠO (FUSE)"}
         </Button>
+        <p className="label text-center text-subtle text-xs">
+          {EXAMPLES.join("  ·  ")}
+        </p>
       </div>
 
-      {/* Fused Result */}
-      {fusedResult && (
-        <div className="mt-6 pt-6 border-t border-line flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4 duration-200">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-mono text-fg font-bold tracking-wider">
-              KẾT QUẢ LAI TẠO (HYBRID RESULT)
-            </span>
-            <span className="text-xs font-mono text-muted">
-              {parentA?.concept.name} × {parentB?.concept.name}
-            </span>
-          </div>
-
+      {fused && (
+        <section
+          className="enter border-t border-line pt-8"
+          aria-label="Kết quả lai tạo"
+        >
           <IdeaResult
-            idea={fusedResult}
+            idea={fused}
             mode="view"
-            eyebrow={`Ý TƯỞNG LAI // ${parentA?.concept.name} × ${parentB?.concept.name}`}
-            onOpenInLab={handleOpenInLab}
+            eyebrow={`FUSION // ${fused.fusion?.parents.join(" × ") ?? "A × B"}`}
+            onOpenInLab={openInLab}
           />
-        </div>
+        </section>
       )}
-    </div>
+    </main>
+  );
+}
+
+function Parent({
+  tag,
+  idea,
+  detail,
+  merging,
+  side,
+  onReroll,
+  onUseCurrent,
+}: {
+  tag: string;
+  idea: Idea;
+  detail: string;
+  merging: boolean;
+  side: "left" | "right";
+  onReroll: () => void;
+  onUseCurrent?: () => void;
+}) {
+  return (
+    <article
+      className={cn(
+        "flex flex-col justify-between gap-6 border border-line bg-surface/30 p-6 transition-transform duration-500 ease-[cubic-bezier(0.65,0,0.35,1)]",
+        merging &&
+          (side === "left"
+            ? "md:translate-x-[55%] md:rotate-[-3deg]"
+            : "md:-translate-x-[55%] md:rotate-[3deg]"),
+      )}
+    >
+      <div className="flex flex-col gap-3">
+        <div className="label flex justify-between text-muted">
+          <span className="text-fg font-bold tracking-wider">Ý TƯỞNG {tag}</span>
+          <span className="font-mono">#{idea.number}</span>
+        </div>
+        <h2 className="text-2xl font-bold uppercase leading-tight tracking-tight">
+          {idea.concept.name}
+        </h2>
+        <p className="line-clamp-3 text-sm leading-relaxed text-muted">
+          “{idea.concept.pitch}”
+        </p>
+      </div>
+      <div className="flex flex-col gap-4">
+        <p className="label border-t border-line pt-3 text-subtle font-mono text-xs">{detail}</p>
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="outline" onClick={onReroll}>
+            Đổi {tag} ngẫu nhiên
+          </Button>
+          {onUseCurrent && (
+            <Button size="sm" variant="ghost" onClick={onUseCurrent}>
+              Dùng ý tưởng từ Lab
+            </Button>
+          )}
+        </div>
+      </div>
+    </article>
   );
 }

@@ -22,12 +22,21 @@ export function isActivatableTarget(target: EventTarget | null): boolean {
   return target instanceof Element && !!target.closest("button, a[href], [role='button'], summary");
 }
 
+/** Normalized key name. Falls back to e.code when e.key is empty/unidentified (IMEs, some automation). */
+function keyName(e: KeyboardEvent): string {
+  if (e.key && e.key !== "Unidentified") return e.key === " " ? "space" : e.key.toLowerCase();
+  if (e.code === "Space") return "space";
+  if (e.code.startsWith("Key")) return e.code.slice(3).toLowerCase();
+  if (e.code.startsWith("Digit")) return e.code.slice(5);
+  return e.code.toLowerCase();
+}
+
 function comboOf(e: KeyboardEvent): string {
   const parts: string[] = [];
   if (e.metaKey || e.ctrlKey) parts.push("mod");
   if (e.altKey) parts.push("alt");
   if (e.shiftKey) parts.push("shift");
-  const key = e.key === " " ? "space" : e.key.toLowerCase();
+  const key = keyName(e);
   parts.push(key);
   return parts.join("+");
 }

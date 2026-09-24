@@ -5,165 +5,125 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSpin } from "@/lib/store";
 import { useOverlay } from "@/lib/ui/dialogs";
+import { cn } from "@/lib/ui/cn";
 import { ChaosSlider, AudioToggle, RegionToggle } from "./controls";
 import { Kbd } from "@/components/ui/Kbd";
+
+const NAV = [
+  { href: "/trends", label: "XU HƯỚNG" },
+  { href: "/saved", label: "ĐÃ LƯU" },
+  { href: "/daily", label: "DAILY SPIN" },
+  { href: "/fuse", label: "LAI TẠO (FUSE)" },
+  { href: "/about", label: "GIỚI THIỆU" },
+];
 
 export function SiteHeader() {
   const pathname = usePathname();
   const chaos = useSpin((s) => s.chaos);
-  const audio = useSpin((s) => s.audio);
-  const setAudio = useSpin((s) => s.setAudio);
   const overlay = useOverlay();
-  const [chaosOpen, setChaosOpen] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  const trendsStatus = useSpin((s) => s.trends.status);
-  const isTrendsLive = trendsStatus === "ONLINE" || trendsStatus === "PARTIAL";
-
-  const navLinks = [
-    { href: "/", label: "Vòng quay" },
-    { href: "/trends", label: "Xu hướng", live: true },
-    { href: "/saved", label: "Đã lưu" },
-    { href: "/daily", label: "Hôm nay" },
-    { href: "/fuse", label: "Ghép ý tưởng" },
-    { href: "/about", label: "Giới thiệu" },
-  ];
+  // Popovers remember which path they were opened on, so navigating closes them.
+  const [chaosFor, setChaosFor] = useState<string | null>(null);
+  const [menuFor, setMenuFor] = useState<string | null>(null);
+  const chaosOpen = chaosFor === pathname;
+  const menuOpen = menuFor === pathname;
+  const setChaosOpen = (v: boolean | ((o: boolean) => boolean)) =>
+    setChaosFor((typeof v === "function" ? v(chaosOpen) : v) ? pathname : null);
+  const setMenuOpen = (v: boolean | ((o: boolean) => boolean)) =>
+    setMenuFor((typeof v === "function" ? v(menuOpen) : v) ? pathname : null);
 
   return (
-    <header className="sticky top-0 z-40 w-full h-14 bg-bg/90 backdrop-blur-md border-b border-line flex items-center justify-between px-4 md:px-6">
-      {/* Left: Brand Logo */}
-      <div className="flex items-center gap-6">
-        <Link
-          href="/"
-          className="group flex items-center gap-2 transition-opacity"
-        >
-          <div className="w-7 h-7 rounded-lg bg-fg text-bg flex items-center justify-center font-bold text-xs shadow-sm">
-            🎡
-          </div>
-          <div className="flex flex-col">
-            <span className="font-sans font-bold tracking-tight text-sm text-fg leading-none flex items-center gap-1">
-              SPIN<span className="text-muted font-mono">//</span>BUILD
-            </span>
-            <span className="text-[9px] font-mono text-muted tracking-widest uppercase">
-              IDEA ROULETTE
-            </span>
-          </div>
-        </Link>
+    <header className="sticky top-0 z-40 h-14 w-full border-b border-line bg-bg/95 backdrop-blur-xs">
+      <div className="mx-auto flex h-full max-w-[1400px] items-center justify-between gap-6 px-4 md:px-8">
+        <div className="flex items-center gap-10">
+          <Link href="/" className="font-sans text-[15px] font-semibold tracking-[-0.02em] uppercase" aria-label="SPIN//BUILD — Trang chủ">
+            SPIN<span className="text-muted">{"//"}</span>BUILD
+          </Link>
 
-        {/* Desktop Nav */}
-        <nav className="hidden lg:flex items-center gap-1 text-xs font-medium">
-          {navLinks.map((link) => {
-            const isActive = pathname === link.href;
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5 ${
-                  isActive
-                    ? "bg-surface-2 text-fg font-semibold border border-line"
-                    : "text-muted hover:text-fg hover:bg-surface"
-                }`}
-              >
-                <span>{link.label}</span>
-                {link.live && isTrendsLive && (
-                  <span className="flex h-1.5 w-1.5 relative">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
-                  </span>
-                )}
-              </Link>
-            );
-          })}
-        </nav>
-      </div>
-
-      {/* Right Controls */}
-      <div className="flex items-center gap-2.5">
-        {/* Audio Quick Toggle */}
-        <button
-          type="button"
-          onClick={() => setAudio(!audio)}
-          className={`p-1.5 rounded-md border text-xs transition-colors cursor-pointer ${
-            audio
-              ? "border-line-strong bg-surface text-fg"
-              : "border-line text-muted hover:text-fg"
-          }`}
-          title={audio ? "Âm thanh: Bật" : "Âm thanh: Tắt"}
-          aria-label="Toggle audio"
-        >
-          {audio ? "🔊" : "🔇"}
-        </button>
-
-        {/* Chaos Level Popover */}
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => setChaosOpen(!chaosOpen)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-line bg-surface hover:border-line-strong transition-colors text-xs cursor-pointer shadow-xs"
-            aria-label="Cài đặt mức độ táo bạo"
-          >
-            <span className="text-muted text-[11px]">Độ dị:</span>
-            <span className="font-mono tabular-nums text-fg font-bold">{chaos}%</span>
-            <span className="text-[10px] text-muted">▾</span>
-          </button>
-
-          {chaosOpen && (
-            <>
-              <div
-                className="fixed inset-0 z-40"
-                onClick={() => setChaosOpen(false)}
-              />
-              <div className="absolute right-0 top-full mt-2 z-50 w-72 shadow-2xl rounded-lg overflow-hidden animate-in fade-in zoom-in-95 duration-100">
-                <ChaosSlider />
-              </div>
-            </>
-          )}
+          <nav className="hidden items-center gap-7 lg:flex" aria-label="Điều hướng chính">
+            {NAV.map((link) => {
+              const active = pathname === link.href || pathname.startsWith(`${link.href}/`);
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  aria-current={active ? "page" : undefined}
+                  className={cn(
+                    "label font-mono text-[11px] tracking-wider transition-colors",
+                    active ? "text-fg underline decoration-1 underline-offset-[6px]" : "text-muted hover:text-fg",
+                  )}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
+          </nav>
         </div>
 
-        {/* Command Palette Trigger */}
-        <button
-          type="button"
-          onClick={() => overlay.toggle("palette")}
-          className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-line hover:border-line-strong text-muted hover:text-fg text-xs transition-colors cursor-pointer"
-          title="Tìm kiếm lệnh nhanh (⌘K hoặc Ctrl+K)"
-        >
-          <span>Tìm</span>
-          <Kbd>⌘K</Kbd>
-        </button>
+        <div className="flex items-center gap-5">
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setChaosOpen((v) => !v)}
+              aria-expanded={chaosOpen}
+              className="label flex h-8 items-center gap-2 border border-line bg-surface/50 px-2.5 text-xs text-muted transition-colors hover:border-fg hover:text-fg"
+            >
+              CHAOS: <span className="tabular font-mono font-bold text-fg">{chaos}%</span>
+            </button>
+            {chaosOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setChaosOpen(false)} aria-hidden="true" />
+                <div className="enter absolute right-0 top-full z-50 mt-3 w-80 border border-line-strong bg-bg p-5 shadow-2xl">
+                  <ChaosSlider />
+                </div>
+              </>
+            )}
+          </div>
 
-        {/* Mobile Menu Toggle */}
-        <button
-          type="button"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="lg:hidden p-1.5 px-2.5 rounded-md border border-line text-xs text-muted hover:text-fg cursor-pointer"
-        >
-          ☰ MENU
-        </button>
+          <button
+            type="button"
+            onClick={() => overlay.toggle("palette")}
+            className="hidden h-8 items-center gap-2 border border-line bg-surface/30 px-2.5 text-muted transition-colors hover:border-fg hover:text-fg sm:flex"
+            aria-label="Mở bảng lệnh"
+          >
+            <span className="label font-mono text-[10px] tracking-wider">COMMAND</span>
+            <Kbd>⌘K</Kbd>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-expanded={menuOpen}
+            className="label h-8 border border-line px-3 text-xs text-muted hover:border-fg hover:text-fg lg:hidden"
+          >
+            {menuOpen ? "ĐÓNG [×]" : "MENU [≡]"}
+          </button>
+        </div>
       </div>
 
-      {/* Mobile Drawer Menu */}
-      {mobileMenuOpen && (
-        <div className="fixed inset-x-0 top-14 bottom-0 z-50 bg-bg/98 backdrop-blur-xl p-6 flex flex-col justify-between lg:hidden border-b border-line animate-in fade-in duration-150">
-          <nav className="flex flex-col gap-2">
-            {navLinks.map((link) => (
+      {menuOpen && (
+        <div className="fixed inset-x-0 bottom-0 top-14 z-50 flex flex-col justify-between overflow-y-auto bg-bg px-6 py-8 lg:hidden">
+          <nav className="flex flex-col border-t border-line" aria-label="Điều hướng">
+            {[{ href: "/", label: "LAB // VÒNG QUAY" }, ...NAV].map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`text-lg font-medium py-2 px-3 rounded-lg transition-colors ${
-                  pathname === link.href ? "bg-surface text-fg font-bold" : "text-muted"
-                }`}
+                onClick={() => setMenuOpen(false)}
+                className={cn(
+                  "display border-b border-line py-4 text-3xl tracking-tight uppercase",
+                  pathname === link.href ? "text-fg font-bold" : "text-muted",
+                )}
               >
                 {link.label}
               </Link>
             ))}
           </nav>
-
-          <div className="flex flex-col gap-4 pt-6 border-t border-line">
+          <div className="flex flex-col gap-6 pt-8 border-t border-line">
             <ChaosSlider />
             <div className="flex items-center justify-between">
               <RegionToggle />
-              <AudioToggle />
+              <span className="label flex items-center gap-2 text-muted text-xs">
+                ÂM THANH <AudioToggle />
+              </span>
             </div>
           </div>
         </div>

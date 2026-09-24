@@ -6,7 +6,6 @@ import {
   planSpin,
   indexFromAngle,
   angleForIndex,
-  mod,
   pointerAngle,
   FLICK_THRESHOLD,
   MAX_ANGULAR_VELOCITY,
@@ -48,7 +47,23 @@ export function RouletteWheel({
   const currentAngleRef = useRef(0);
   const lastActiveIndexRef = useRef<number | null>(null);
   const [activeSectorIndex, setActiveSectorIndex] = useState<number | null>(activeIndex ?? null);
-  const lastSpinIdRef = useRef<number | null>(null);
+  // Per-sector nodes, repainted directly during motion (no React render per tick).
+  const wedgeEls = useRef<(SVGPathElement | null)[]>([]);
+  const labelEls = useRef<(SVGTextElement | null)[]>([]);
+  const numEls = useRef<(SVGTextElement | null)[]>([]);
+  const paint = useCallback((idx: number | null) => {
+    wedgeEls.current.forEach((el, i) => el?.setAttribute("fill", i === idx ? "var(--fg)" : "transparent"));
+    labelEls.current.forEach((el, i) => el?.setAttribute("fill", i === idx ? "var(--bg)" : "var(--fg)"));
+    numEls.current.forEach((el, i) => el?.setAttribute("fill", i === idx ? "var(--bg)" : "var(--muted)"));
+  }, []);
+  // Only a *change* of spinId spins; mounting with an old id must not replay it.
+  const lastSpinIdRef = useRef<number | null>(spinId);
+  const animatingRef = useRef(false);
+  // Latest callbacks/flags, read inside the rAF loop so prop changes never restart a spin.
+  const live = useRef({ onSettle, onTick, audio });
+  useEffect(() => {
+    live.current = { onSettle, onTick, audio };
+  });
 
   // Dragging state
   const isDraggingRef = useRef(false);
@@ -63,11 +78,16 @@ export function RouletteWheel({
 
   // Sync external activeIndex if provided and not spinning
   useEffect(() => {
-    if (activeIndex !== undefined && activeIndex !== null) {
-      setActiveSectorIndex(activeIndex);
-      lastActiveIndexRef.current = activeIndex;
+    if (activeIndex === undefined || activeIndex === null || animatingRef.current) return;
+    setActiveSectorIndex(activeIndex);
+    paint(activeIndex);
+    lastActiveIndexRef.current = activeIndex;
+    // Rest the disc on that sector (e.g. after remounting on the lab page).
+    if (indexFromAngle(currentAngleRef.current, sectorCount) !== activeIndex) {
+      currentAngleRef.current = angleForIndex(activeIndex, sectorCount);
+      if (wheelRef.current) wheelRef.current.style.transform = `rotate(${currentAngleRef.current}deg)`;
     }
-  }, [activeIndex]);
+  }, [activeIndex, sectorCount, paint]);
 
   // Handle spinId changes
   useEffect(() => {
@@ -82,10 +102,16 @@ export function RouletteWheel({
       if (wheelRef.current) {
         wheelRef.current.style.transform = `rotate(${finalAngle}deg)`;
       }
-      setActiveSectorIndex(targetIndex);
-      if (audio) playSettle();
-      onSettle?.(targetIndex);
-      return;
+      paint(targetIndex);
+      lastActiveIndexRef.current = targetIndex;
+      live.current.onTick?.(targetIndex);
+      // Reduced motion: no rotation, just a short beat before settling.
+      const t = setTimeout(() => {
+        setActiveSectorIndex(targetIndex);
+        if (live.current.audio) playSettle();
+        live.current.onSettle?.(targetIndex);
+      }, 180);
+      return () => clearTimeout(t);
     }
 
     // Plan spin animation
@@ -96,7 +122,9 @@ export function RouletteWheel({
       velocity: Math.abs(dragVelocityRef.current) > FLICK_THRESHOLD ? dragVelocityRef.current : 0,
       minTurns: 4,
     });
+    dragVelocityRef.current = 0; // a flick applies to one spin only
 
+    animatingRef.current = true;
     let startTime: number | null = null;
     let animId: number;
 
@@ -105,13 +133,19 @@ export function RouletteWheel({
       const elapsed = now - startTime;
 
       if (elapsed >= plan.durationMs) {
+        animatingRef.current = false;
         currentAngleRef.current = plan.toAngle;
         if (wheelRef.current) {
           wheelRef.current.style.transform = `rotate(${plan.toAngle}deg)`;
         }
         setActiveSectorIndex(targetIndex);
-        if (audio) playSettle();
-        onSettle?.(targetIndex);
+        paint(targetIndex);
+        if (lastActiveIndexRef.current !== targetIndex) {
+          lastActiveIndexRef.current = targetIndex;
+          live.current.onTick?.(targetIndex);
+        }
+        if (live.current.audio) playSettle();
+        live.current.onSettle?.(targetIndex);
         return;
       }
 
@@ -124,17 +158,20 @@ export function RouletteWheel({
       const idx = indexFromAngle(currentAngle, sectorCount);
       if (idx !== lastActiveIndexRef.current) {
         lastActiveIndexRef.current = idx;
-        setActiveSectorIndex(idx);
-        onTick?.(idx);
-        if (audio) playTick();
+        paint(idx);
+        live.current.onTick?.(idx);
+        if (live.current.audio) playTick();
       }
 
       animId = requestAnimationFrame(frame);
     };
 
     animId = requestAnimationFrame(frame);
-    return () => cancelAnimationFrame(animId);
-  }, [spinId, targetIndex, sectorCount, reducedMotion, audio, onSettle, onTick]);
+    return () => {
+      cancelAnimationFrame(animId);
+      animatingRef.current = false;
+    };
+  }, [spinId, targetIndex, sectorCount, reducedMotion, paint]);
 
   // Pointer drag & flick gestures
   const handlePointerDown = (e: React.PointerEvent) => {
@@ -191,7 +228,7 @@ export function RouletteWheel({
     const idx = indexFromAngle(newAngle, sectorCount);
     if (idx !== lastActiveIndexRef.current) {
       lastActiveIndexRef.current = idx;
-      setActiveSectorIndex(idx);
+      paint(idx);
       if (audio) playTick(0.8);
       onTick?.(idx);
     }
@@ -216,235 +253,147 @@ export function RouletteWheel({
     onSpinRequest?.();
   }, [disabled, onSpinRequest]);
 
-  // SVG Geometry
+  // SVG geometry (viewBox units)
   const size = 600;
   const center = size / 2;
-  const radius = 270;
-  const innerRadius = 80;
+  const bezelOuter = 294;
+  const radius = 256; // rotating disc
+  const labelStart = 100;
 
-  // Pre-generate sector paths
+  // Sector i is centered at i * S degrees (0° = 12 o'clock).
   const sectorWedges = useMemo(() => {
     return sectors.map((sector, i) => {
-      // Sector i centered at i * S
-      const startDeg = i * sectorDegrees - sectorDegrees / 2;
-      const endDeg = i * sectorDegrees + sectorDegrees / 2;
       const midDeg = i * sectorDegrees;
-
-      const startRad = ((startDeg - 90) * Math.PI) / 180;
-      const endRad = ((endDeg - 90) * Math.PI) / 180;
-
-      const x1 = center + radius * Math.cos(startRad);
-      const y1 = center + radius * Math.sin(startRad);
-      const x2 = center + radius * Math.cos(endRad);
-      const y2 = center + radius * Math.sin(endRad);
-
-      const pathData = [
-        `M ${center} ${center}`,
-        `L ${x1} ${y1}`,
-        `A ${radius} ${radius} 0 0 1 ${x2} ${y2}`,
-        "Z",
-      ].join(" ");
-
-      // Label positioning along radial centerline
-      const labelRad = ((midDeg - 90) * Math.PI) / 180;
-      const labelDist = radius * 0.64;
-      const lx = center + labelDist * Math.cos(labelRad);
-      const ly = center + labelDist * Math.sin(labelRad);
-
-      // Text rotation: ensure text is always right-side up and readable
-      // Right half (0 <= midDeg <= 180): ray angle midDeg - 90 is between -90 and +90 (upright).
-      // Left half (180 < midDeg < 360): ray angle flipped by 180 (midDeg + 90) so text is upright.
-      const isLeftSide = midDeg > 180 && midDeg < 360;
-      const textRot = isLeftSide ? midDeg + 90 : midDeg - 90;
-
-      return {
-        id: sector.id,
-        index: i,
-        label: sector.label,
-        icon: sector.icon,
-        labelVi: sector.labelVi,
-        pathData,
-        lx,
-        ly,
-        textRot,
-        midDeg,
-      };
+      const a = polar(center, radius, midDeg - sectorDegrees / 2);
+      const b = polar(center, radius, midDeg + sectorDegrees / 2);
+      const pathData = `M ${center} ${center} L ${a.x} ${a.y} A ${radius} ${radius} 0 0 1 ${b.x} ${b.y} Z`;
+      const num = polar(center, radius - 18, midDeg);
+      // Labels run along the radius; flip on the left half so they never read upside down.
+      const flip = midDeg > 180;
+      return { id: sector.id, index: i, label: sector.label, pathData, midDeg, flip, num };
     });
-  }, [sectors, sectorDegrees, center, radius]);
+  }, [sectors, sectorDegrees, center]);
 
-  // Outer bezel ticks
+  // Static graduated bezel: fine every 2°, medium every 10°, long at sector bounds.
   const bezelTicks = useMemo(() => {
-    const ticks = [];
-    const tickCount = 72; // Fine degree ticks
-    for (let i = 0; i < tickCount; i++) {
-      const deg = (i * 360) / tickCount;
-      const isSectorBound = i % (tickCount / sectorCount) === 0;
-      const rad = ((deg - 90) * Math.PI) / 180;
-      const rOuter = radius + 18;
-      const rInner = isSectorBound ? radius + 4 : radius + 10;
-      const x1 = center + rOuter * Math.cos(rad);
-      const y1 = center + rOuter * Math.sin(rad);
-      const x2 = center + rInner * Math.cos(rad);
-      const y2 = center + rInner * Math.sin(rad);
-      ticks.push({ x1, y1, x2, y2, isSectorBound, key: i });
+    const ticks: { x1: number; y1: number; x2: number; y2: number; kind: 0 | 1 | 2; key: number }[] = [];
+    for (let deg = 0; deg < 360; deg += 2) {
+      const bound = Math.abs((deg + sectorDegrees / 2) % sectorDegrees) < 0.001;
+      const kind: 0 | 1 | 2 = bound ? 2 : deg % 10 === 0 ? 1 : 0;
+      const inner = kind === 2 ? bezelOuter - 26 : kind === 1 ? bezelOuter - 16 : bezelOuter - 10;
+      const p1 = polar(center, bezelOuter - 2, deg);
+      const p2 = polar(center, inner, deg);
+      ticks.push({ x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y, kind, key: deg });
     }
     return ticks;
-  }, [center, radius, sectorCount]);
+  }, [sectorDegrees, center]);
 
   return (
     <div
       ref={containerRef}
-      className={`relative select-none touch-none aspect-square flex items-center justify-center ${className}`}
+      className={`relative select-none touch-none aspect-square [container-type:inline-size] ${className}`}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
-      style={{ cursor: disabled ? "not-allowed" : "grab" }}
+      style={{ cursor: disabled ? "default" : "grab" }}
     >
-      <svg
-        viewBox={`0 0 ${size} ${size}`}
-        className="w-full h-full overflow-visible drop-shadow-[0_0_60px_rgba(99,102,241,0.08)]"
-      >
-        {/* Background dark disk */}
-        <circle cx={center} cy={center} r={radius + 22} fill="var(--surface)" />
-        <circle cx={center} cy={center} r={radius + 20} fill="none" stroke="var(--line-strong)" strokeWidth="1" />
-
-        {/* Outer bezel graduated ticks */}
-        {bezelTicks.map((tick) => (
+      <svg viewBox={`0 0 ${size} ${size}`} className="block h-full w-full overflow-visible" aria-hidden="true">
+        {/* Bezel */}
+        <circle cx={center} cy={center} r={bezelOuter} fill="none" stroke="var(--line-strong)" strokeWidth="1" />
+        {bezelTicks.map((t) => (
           <line
-            key={tick.key}
-            x1={tick.x1}
-            y1={tick.y1}
-            x2={tick.x2}
-            y2={tick.y2}
-            stroke={tick.isSectorBound ? "var(--fg)" : "var(--line)"}
-            strokeWidth={tick.isSectorBound ? 1.5 : 1}
+            key={t.key}
+            x1={t.x1}
+            y1={t.y1}
+            x2={t.x2}
+            y2={t.y2}
+            stroke={t.kind === 0 ? "var(--line)" : t.kind === 1 ? "var(--line-strong)" : "var(--fg)"}
+            strokeWidth={t.kind === 2 ? 1.25 : 1}
           />
         ))}
 
-        {/* Rotating Wheel Group */}
-        <g
-          ref={wheelRef}
-          style={{
-            transformOrigin: `${center}px ${center}px`,
-            willChange: "transform",
-          }}
-        >
+        {/* Rotating disc */}
+        <g ref={wheelRef} style={{ transformOrigin: `${center}px ${center}px`, willChange: "transform" }}>
+          <circle cx={center} cy={center} r={radius} fill="var(--bg)" stroke="var(--line-strong)" strokeWidth="1" />
           {sectorWedges.map((w) => {
-            const isActive = activeSectorIndex === w.index;
-            const wedgeFill = isActive 
-              ? "var(--fg)" 
-              : w.index % 2 === 0 
-                ? "var(--surface)" 
-                : "var(--surface-2)";
-
+            const active = activeSectorIndex === w.index;
+            const pivot = center + (labelStart + radius - 32) / 2;
             return (
-              <g key={w.id} className="transition-colors duration-100">
-                {/* Wedge background */}
-                <path
-                  d={w.pathData}
-                  fill={wedgeFill}
-                  stroke="var(--line)"
-                  strokeWidth="1"
-                />
-
-                {/* Sector Text & Icon: Upright, centered and readable */}
-                <g transform={`translate(${w.lx}, ${w.ly}) rotate(${w.textRot})`}>
+              <g key={w.id}>
+                <path ref={(el) => { wedgeEls.current[w.index] = el; }} d={w.pathData} fill={active ? "var(--fg)" : "transparent"} stroke="var(--line)" strokeWidth="1" />
+                <g transform={`rotate(${w.midDeg - 90} ${center} ${center})`}>
                   <text
-                    x="0"
-                    y="0"
-                    textAnchor="middle"
+                    ref={(el) => { labelEls.current[w.index] = el; }}
+                    x={w.flip ? center + radius - 32 : center + labelStart}
+                    y={center}
+                    textAnchor={w.flip ? "end" : "start"}
                     dominantBaseline="central"
-                    fill={isActive ? "var(--bg)" : "var(--fg)"}
-                    className="font-mono font-bold select-none pointer-events-none tracking-wider text-[10px] uppercase"
+                    transform={w.flip ? `rotate(180 ${pivot} ${center})` : undefined}
+                    fill={active ? "var(--bg)" : "var(--fg)"}
+                    style={{ fontFamily: "var(--font-sans)", fontSize: 11.5, fontWeight: 500, letterSpacing: "0.09em" }}
                   >
-                    {w.icon ? `${w.icon} ` : ""}{w.label}
+                    {w.label}
                   </text>
                 </g>
+                <text
+                  ref={(el) => { numEls.current[w.index] = el; }}
+                  x={w.num.x}
+                  y={w.num.y}
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                  fill={active ? "var(--bg)" : "var(--muted)"}
+                  transform={`rotate(${w.midDeg} ${w.num.x} ${w.num.y})`}
+                  style={{ fontFamily: "var(--font-mono)", fontSize: 9, letterSpacing: "0.04em" }}
+                >
+                  {String(w.index + 1).padStart(2, "0")}
+                </text>
               </g>
             );
           })}
-
-          {/* Hairline inner sector separator circle */}
-          <circle cx={center} cy={center} r={innerRadius + 4} fill="none" stroke="var(--line-strong)" strokeWidth="1.5" />
+          <circle cx={center} cy={center} r={labelStart - 8} fill="var(--bg)" stroke="var(--line-strong)" strokeWidth="1" />
         </g>
 
-        {/* Fixed 12 o'clock Selector Indicator */}
-        <g className="pointer-events-none drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]">
-          {/* Top needle pointing down into the wheel */}
-          <polygon
-            points={`${center - 8},${center - radius - 26} ${center + 8},${center - radius - 26} ${center},${center - radius + 6}`}
-            fill="var(--fg)"
-          />
-          <circle cx={center} cy={center - radius - 26} r="3" fill="var(--bg)" />
-          {/* Hairline crosshair register marks */}
-          <line x1={center} y1={center - radius - 35} x2={center} y2={center - radius - 15} stroke="var(--fg)" strokeWidth="2" />
-        </g>
-
-        {/* Center Circular HUB Button */}
-        <g
-          onClick={handleHubClick}
-          className="cursor-pointer group"
-          role="button"
-          tabIndex={0}
-          aria-label="Quay ý tưởng ngay"
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              handleHubClick();
-            }
-          }}
-        >
-          {/* Outer hub bevel ring */}
-          <circle
-            cx={center}
-            cy={center}
-            r={innerRadius}
-            fill="var(--fg)"
-            className="transition-transform duration-200 group-hover:scale-[1.04] group-active:scale-[0.96]"
-            style={{ transformOrigin: `${center}px ${center}px` }}
-          />
-          <circle
-            cx={center}
-            cy={center}
-            r={innerRadius - 4}
-            fill="var(--fg)"
-            stroke="var(--bg)"
+        {/* Fixed selector at 12 o'clock */}
+        <g className="pointer-events-none">
+          <line
+            x1={center}
+            y1={center - bezelOuter - 14}
+            x2={center}
+            y2={center - radius + 22}
+            stroke="var(--fg)"
             strokeWidth="1.5"
-            strokeDasharray="4 2"
           />
-          {/* Hub Icon & Text */}
-          <text
-            x={center}
-            y={center - 12}
-            textAnchor="middle"
-            dominantBaseline="central"
-            className="select-none pointer-events-none text-[20px]"
-          >
-            🎲
-          </text>
-          <text
-            x={center}
-            y={center + 12}
-            textAnchor="middle"
-            dominantBaseline="central"
-            fill="var(--bg)"
-            className="font-sans font-black tracking-tight text-[18px] uppercase select-none pointer-events-none"
-          >
-            QUAY
-          </text>
-          <text
-            x={center}
-            y={center + 26}
-            textAnchor="middle"
-            dominantBaseline="central"
-            fill="var(--bg)"
-            className="font-mono font-medium text-[8.5px] uppercase select-none pointer-events-none opacity-80"
-          >
-            SPIN [SPACE]
-          </text>
+          <polygon
+            points={`${center - 7},${center - bezelOuter - 14} ${center + 7},${center - bezelOuter - 14} ${center},${center - bezelOuter - 2}`}
+            fill="var(--fg)"
+          />
         </g>
       </svg>
+
+      {/* Hub: a real button over the SVG center */}
+      <button
+        type="button"
+        onClick={handleHubClick}
+        onPointerDown={(e) => e.stopPropagation()}
+        disabled={disabled}
+        aria-label="Quay vòng quay"
+        className="absolute left-1/2 top-1/2 flex aspect-square w-[27%] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full bg-fg text-bg outline-offset-4 transition-transform duration-150 ease-out hover:scale-[1.03] active:scale-[0.97] disabled:cursor-default disabled:hover:scale-100"
+      >
+        <span className="font-sans text-[max(16px,6cqw)] font-semibold uppercase leading-none tracking-[-0.03em]">
+          Quay
+        </span>
+        <span className="mt-[1.2cqw] font-mono text-[max(8px,1.6cqw)] uppercase tracking-[0.14em] opacity-60">
+          Space
+        </span>
+      </button>
     </div>
   );
+}
+
+function polar(center: number, r: number, deg: number) {
+  const rad = ((deg - 90) * Math.PI) / 180;
+  // Rounded so server and client render identical attributes (no hydration mismatch).
+  const round = (n: number) => Math.round(n * 100) / 100;
+  return { x: round(center + r * Math.cos(rad)), y: round(center + r * Math.sin(rad)) };
 }
