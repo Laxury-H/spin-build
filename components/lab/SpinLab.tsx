@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback, useMemo, useRef, type ReactNode } from "react";
+import { useEffect, useCallback, useMemo, useRef, useState, type ReactNode } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSpin } from "@/lib/store";
@@ -11,6 +11,7 @@ import { dailyNumber } from "@/lib/random";
 import { SECTORS, sectorPosition, POOL_ATOMS } from "@/data";
 import { DNA_KEYS, DNA_LABEL } from "@/types";
 import { RouletteWheel } from "@/components/roulette/RouletteWheel";
+import { CsgoReel } from "@/components/roulette/CsgoReel";
 import { IdeaResult } from "@/components/idea/IdeaResult";
 import { TrendTicker } from "./TrendTicker";
 import { RevealOverlay } from "./RevealOverlay";
@@ -19,6 +20,7 @@ import { Kbd } from "@/components/ui/Kbd";
 import { Button } from "@/components/ui/Button";
 import { ArrowRightIcon } from "@/components/ui/icons";
 import { useHydrated, useReducedMotion } from "@/lib/hooks";
+import { cn } from "@/lib/ui/cn";
 
 export function SpinLab() {
   const router = useRouter();
@@ -46,6 +48,8 @@ export function SpinLab() {
   const toggleSave = useSpin((s) => s.toggleSave);
 
   const reducedMotion = useReducedMotion();
+  const [spinMode, setSpinMode] = useState<"csgo" | "wheel">("csgo");
+
   // Sector readout above the selector, written directly on every tick (no re-render).
   const readoutRef = useRef<HTMLSpanElement>(null);
   const handleTick = useCallback((i: number) => {
@@ -138,7 +142,7 @@ export function SpinLab() {
               onClick={backToWheel}
               className="label flex items-center gap-2 text-muted transition-colors hover:text-fg font-mono text-xs"
             >
-              <span aria-hidden="true">←</span> VỀ VÒNG QUAY LAB <Kbd>ESC</Kbd>
+              <span aria-hidden="true">←</span> VỀ PHÒNG QUAY LAB <Kbd>ESC</Kbd>
             </button>
             <div className="label hidden items-center gap-4 text-muted sm:flex text-xs font-mono">
               <span className="flex items-center gap-1.5">
@@ -164,8 +168,8 @@ export function SpinLab() {
         <section className="flex flex-col justify-between gap-8 lg:col-span-3">
           <div className="flex flex-col gap-6">
             <div className="flex items-center gap-2">
-              <span className="h-2 w-2 bg-fg inline-block" />
-              <span className="label font-mono text-xs text-muted tracking-wider">LABORATORY READY</span>
+              <span className="h-2 w-2 bg-amber-400 inline-block animate-pulse" />
+              <span className="label font-mono text-xs text-muted tracking-wider">LAB // CS:GO UNBOX READY</span>
             </div>
             <h1 className="display text-[clamp(2.2rem,3vw,3.4rem)] tracking-tight">
               BUILD SOMETHING
@@ -202,39 +206,85 @@ export function SpinLab() {
           </nav>
         </section>
 
-        {/* Center: the wheel */}
-        <section className="flex flex-col items-center justify-center gap-4 lg:col-span-6" aria-label="Vòng quay">
-          <div className="label flex h-4 items-center gap-2 text-muted font-mono text-xs" aria-hidden="true">
-            <span>▼</span>
-            <span ref={readoutRef} className="tabular whitespace-pre text-fg font-bold tracking-wider">
-              --  SẴN SÀNG QUAY
-            </span>
+        {/* Center: CS:GO Reel or Roulette Wheel */}
+        <section className="flex flex-col items-center justify-center gap-4 lg:col-span-6" aria-label="Khu vực quay ý tưởng">
+          <div className="flex w-full items-center justify-between gap-4">
+            <div className="label flex h-4 items-center gap-2 text-muted font-mono text-xs" aria-hidden="true">
+              <span>▼</span>
+              <span ref={readoutRef} className="tabular whitespace-pre text-fg font-bold tracking-wider">
+                --  SẴN SÀNG QUAY
+              </span>
+            </div>
+
+            {/* Mode Switcher */}
+            <div className="flex items-center border border-line bg-surface/50 p-0.5" role="group" aria-label="Chế độ quay">
+              <button
+                type="button"
+                onClick={() => setSpinMode("csgo")}
+                className={cn(
+                  "px-2.5 py-1 text-[10px] font-mono font-bold tracking-wider transition-colors",
+                  spinMode === "csgo" ? "bg-amber-400 text-black font-extrabold shadow-sm" : "text-muted hover:text-fg"
+                )}
+              >
+                [ ▬ CS:GO REEL ]
+              </button>
+              <button
+                type="button"
+                onClick={() => setSpinMode("wheel")}
+                className={cn(
+                  "px-2.5 py-1 text-[10px] font-mono font-bold tracking-wider transition-colors",
+                  spinMode === "wheel" ? "bg-fg text-bg" : "text-muted hover:text-fg"
+                )}
+              >
+                [ ◯ WHEEL ]
+              </button>
+            </div>
           </div>
 
-          <div className="relative w-full max-w-[min(100%,calc(100dvh-230px))] min-w-[260px]">
-            <RouletteWheel
-              sectors={SECTORS}
-              spinId={spinId}
-              targetIndex={targetIndex}
-              onSettle={handleWheelSettle}
-              onTick={handleTick}
-              onSpinRequest={() => spin()}
-              activeIndex={phase === "idle" || phase === "result" ? targetIndex : null}
-              reducedMotion={reducedMotion}
-              audio={audio}
-              disabled={phase === "spinning"}
-              className="w-full"
-            />
-            {phase === "revealing" && current && (
-              <RevealOverlay idea={current} onComplete={finishReveal} onSkip={skipToResult} />
-            )}
-          </div>
+          {spinMode === "csgo" ? (
+            <div className="relative w-full my-auto">
+              <CsgoReel
+                sectors={SECTORS}
+                spinId={spinId}
+                targetIndex={targetIndex}
+                onSettle={handleWheelSettle}
+                onTick={handleTick}
+                onSpinRequest={() => spin()}
+                audio={audio}
+                reducedMotion={reducedMotion}
+                disabled={phase === "spinning"}
+                className="w-full shadow-2xl"
+              />
+              {phase === "revealing" && current && (
+                <RevealOverlay idea={current} onComplete={finishReveal} onSkip={skipToResult} />
+              )}
+            </div>
+          ) : (
+            <div className="relative w-full max-w-[min(100%,calc(100dvh-230px))] min-w-[260px]">
+              <RouletteWheel
+                sectors={SECTORS}
+                spinId={spinId}
+                targetIndex={targetIndex}
+                onSettle={handleWheelSettle}
+                onTick={handleTick}
+                onSpinRequest={() => spin()}
+                activeIndex={phase === "idle" || phase === "result" ? targetIndex : null}
+                reducedMotion={reducedMotion}
+                audio={audio}
+                disabled={phase === "spinning"}
+                className="w-full"
+              />
+              {phase === "revealing" && current && (
+                <RevealOverlay idea={current} onComplete={finishReveal} onSkip={skipToResult} />
+              )}
+            </div>
+          )}
 
           <p className="label flex items-center gap-2 text-muted pointer-coarse:hidden font-mono text-xs">
-            <Kbd>SPACE</Kbd> ĐỂ QUAY <span className="text-subtle">·</span> HOẶC NHẤP VÀO TÂM / VUỐT BÁNH XE
+            <Kbd>SPACE</Kbd> ĐỂ QUAY {spinMode === "wheel" ? "· HOẶC NHẤP VÀO TÂM / VUỐT BÁNH XE" : "· HOẶC NHẤP MỞ HÒM Ý TƯỞNG"}
           </p>
           <p className="label hidden text-muted pointer-coarse:block font-mono text-xs">
-            CHẠM TÂM HOẶC VUỐT BÁNH XE ĐỂ QUAY
+            CHẠM NÚT ĐỂ MỞ HÒM Ý TƯỞNG
           </p>
 
           {current && phase === "idle" && (
