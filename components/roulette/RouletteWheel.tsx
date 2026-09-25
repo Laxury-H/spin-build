@@ -47,6 +47,7 @@ export function RouletteWheel({
   const currentAngleRef = useRef(0);
   const lastActiveIndexRef = useRef<number | null>(null);
   const [activeSectorIndex, setActiveSectorIndex] = useState<number | null>(activeIndex ?? null);
+  const [needleTick, setNeedleTick] = useState(false);
   // Per-sector nodes, repainted directly during motion (no React render per tick).
   const wedgeEls = useRef<(SVGPathElement | null)[]>([]);
   const labelEls = useRef<(SVGTextElement | null)[]>([]);
@@ -143,6 +144,8 @@ export function RouletteWheel({
         if (lastActiveIndexRef.current !== targetIndex) {
           lastActiveIndexRef.current = targetIndex;
           live.current.onTick?.(targetIndex);
+          setNeedleTick(true);
+          setTimeout(() => setNeedleTick(false), 50);
         }
         if (live.current.audio) playSettle();
         live.current.onSettle?.(targetIndex);
@@ -160,6 +163,8 @@ export function RouletteWheel({
         lastActiveIndexRef.current = idx;
         paint(idx);
         live.current.onTick?.(idx);
+        setNeedleTick(true);
+        setTimeout(() => setNeedleTick(false), 50);
         if (live.current.audio) playTick();
       }
 
@@ -231,6 +236,8 @@ export function RouletteWheel({
       paint(idx);
       if (audio) playTick(0.8);
       onTick?.(idx);
+      setNeedleTick(true);
+      setTimeout(() => setNeedleTick(false), 50);
     }
   };
 
@@ -355,7 +362,16 @@ export function RouletteWheel({
         </g>
 
         {/* Fixed selector at 12 o'clock */}
-        <g className="pointer-events-none">
+        <g className={`pointer-events-none transition-all duration-75 ${needleTick ? "opacity-100" : "opacity-80"}`}>
+          {needleTick && (
+            <circle cx={center} cy={center - radius + 10} r="25" fill="url(#flashGrad)" />
+          )}
+          <defs>
+            <radialGradient id="flashGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="var(--fg)" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="var(--fg)" stopOpacity="0" />
+            </radialGradient>
+          </defs>
           <line
             x1={center}
             y1={center - bezelOuter - 14}
@@ -381,7 +397,7 @@ export function RouletteWheel({
         className="absolute left-1/2 top-1/2 flex aspect-square w-[27%] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full bg-fg text-bg outline-offset-4 transition-transform duration-150 ease-out hover:scale-[1.03] active:scale-[0.97] disabled:cursor-default disabled:hover:scale-100"
       >
         <span className="font-sans text-[max(16px,6cqw)] font-semibold uppercase leading-none tracking-[-0.03em]">
-          Quay
+          Spin
         </span>
         <span className="mt-[1.2cqw] font-mono text-[max(8px,1.6cqw)] uppercase tracking-[0.14em] opacity-60">
           Space
