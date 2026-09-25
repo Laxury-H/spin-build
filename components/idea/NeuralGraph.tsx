@@ -128,6 +128,7 @@ export function NeuralGraphView({ idea }: { idea: Idea }) {
 
       ctx.clearRect(0, 0, width, height);
 
+      // Draw Edges
       edges.forEach(e => {
         ctx.beginPath();
         ctx.moveTo(e.source.x, e.source.y);
@@ -152,8 +153,10 @@ export function NeuralGraphView({ idea }: { idea: Idea }) {
           ctx.fillStyle = "rgba(255,255,255,0.4)";
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
+          
+          // Background pill
           const tw = ctx.measureText(e.label).width;
-          ctx.fillStyle = "#0a0a0a";
+          ctx.fillStyle = "#050505";
           ctx.fillRect(midX - tw/2 - 2, midY - 6, tw + 4, 12);
           ctx.fillStyle = "rgba(255,255,255,0.5)";
           ctx.fillText(e.label, midX, midY);
@@ -162,6 +165,7 @@ export function NeuralGraphView({ idea }: { idea: Idea }) {
 
       ctx.setLineDash([]);
 
+      // Draw Nodes
       for (const id in nodes) {
         const n = nodes[id];
         
@@ -185,11 +189,22 @@ export function NeuralGraphView({ idea }: { idea: Idea }) {
         if (n.type === "adjacent") ctx.stroke();
         ctx.shadowBlur = 0;
         
-        ctx.font = n.type === "concept" ? "bold 10px 'Geist Mono', monospace" : "10px 'Geist Mono', monospace";
-        ctx.fillStyle = n.type === "concept" ? "#ffffff" : n.type === "adjacent" ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.7)";
+        // Draw Text with background halo to prevent line overlapping
+        ctx.font = n.type === "concept" ? "bold 11px 'Geist Mono', monospace" : "10px 'Geist Mono', monospace";
         ctx.textAlign = "center";
         ctx.textBaseline = "top";
-        ctx.fillText(n.label, n.x, n.y + n.radius + 4);
+        
+        const textY = n.y + n.radius + 6;
+        
+        // Halo effect: stroke text with background color
+        ctx.lineJoin = "round";
+        ctx.miterLimit = 2;
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = "#050505";
+        ctx.strokeText(n.label, n.x, textY);
+        
+        ctx.fillStyle = n.type === "concept" ? "#ffffff" : n.type === "adjacent" ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.75)";
+        ctx.fillText(n.label, n.x, textY);
       }
 
       if (frameCount < 150) {
