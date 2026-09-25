@@ -107,7 +107,7 @@ export function IdeaResult({ idea, mode, revealKey, onOpenInLab, className, eyeb
           
           <div className="flex flex-col gap-5">
             <h1 className="display break-words text-[clamp(2.6rem,7vw,6.5rem)] tracking-tight leading-[0.9]">
-              <ScrambleText text={c.name} trigger={revealKey} duration={420} />
+              {c.name}
             </h1>
             <p key={`${idea.id}-pitch`} className="enter max-w-[40ch] text-[clamp(1.2rem,2.1vw,1.6rem)] leading-snug font-normal text-fg">
               “{c.pitch}”
@@ -206,10 +206,10 @@ export function IdeaResult({ idea, mode, revealKey, onOpenInLab, className, eyeb
                     
                     <div className="flex min-w-0 flex-1 flex-col gap-1">
                       <span className="label text-[9px] text-muted tracking-widest uppercase">{t(geneKey)}</span>
-                      <span className="truncate text-sm font-bold uppercase leading-tight tracking-[-0.01em]">
-                        {locked ? value : <ScrambleText text={value} trigger={revealKey} duration={300} delay={i * 40} />}
+                      <span className="text-sm break-words font-bold uppercase leading-tight tracking-[-0.01em]">
+                        {value}
                       </span>
-                      <span className="line-clamp-2 text-xs leading-5 text-muted">{detail}</span>
+                      <span className="text-xs leading-5 text-muted">{detail}</span>
                     </div>
                     {lab && (
                       <button
@@ -291,7 +291,7 @@ function ViralMeter({ score, label, reasons, revealKey }: { score: number; label
       <div className="flex items-baseline justify-between">
         <span className="label font-bold text-fg tracking-wider uppercase">{label}</span>
         <span className="tabular font-mono text-xl font-bold tracking-tight">
-          <ScrambleText text={`${score}/100`} trigger={revealKey} duration={300} />
+          {score}/100
         </span>
       </div>
       <div className="h-1.5 w-full border border-line p-[1px]">

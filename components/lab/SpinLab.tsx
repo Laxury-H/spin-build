@@ -14,7 +14,6 @@ import { RouletteWheel } from "@/components/roulette/RouletteWheel";
 import { CsgoReel } from "@/components/roulette/CsgoReel";
 import { IdeaResult } from "@/components/idea/IdeaResult";
 import { TrendTicker } from "./TrendTicker";
-import { RevealOverlay } from "./RevealOverlay";
 import { ChaosSlider, RegionToggle, AudioToggle, TrendEngineStatus } from "@/components/shell/controls";
 import { Kbd } from "@/components/ui/Kbd";
 import { Button } from "@/components/ui/Button";
@@ -85,6 +84,8 @@ export function SpinLab() {
   const handleWheelSettle = useCallback(() => {
     flashInvert(160);
     settle();
+    // Skip the redundant reveal overlay for a cleaner, more professional UX
+    setTimeout(() => useSpin.getState().finishReveal(), 50);
   }, [settle]);
 
   const spinFresh = useCallback(() => spin(), [spin]);
@@ -247,9 +248,7 @@ export function SpinLab() {
                 disabled={phase === "spinning"}
                 className="w-full shadow-2xl"
               />
-              {phase === "revealing" && current && (
-                <RevealOverlay idea={current} onComplete={finishReveal} onSkip={skipToResult} />
-              )}
+              
             </div>
           ) : (
             <div className="relative w-full max-w-[min(100%,calc(100dvh-230px))] min-w-[260px]">
@@ -266,9 +265,7 @@ export function SpinLab() {
                 disabled={phase === "spinning"}
                 className="w-full"
               />
-              {phase === "revealing" && current && (
-                <RevealOverlay idea={current} onComplete={finishReveal} onSkip={skipToResult} />
-              )}
+              
             </div>
           )}
 

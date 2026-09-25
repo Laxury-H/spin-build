@@ -255,17 +255,8 @@ export function CsgoReel({
           aria-hidden="true"
         />
 
-        {/* Center Vertical Target Needle */}
-        <div
-          className={`pointer-events-none absolute left-1/2 top-0 bottom-0 z-30 w-[2px] -translate-x-1/2 bg-fg shadow-[0_0_12px_rgba(255,255,255,0.9)] transition-transform duration-75 ${
-            needleTick ? "scale-y-110 brightness-200 shadow-[0_0_30px_rgba(255,255,255,1)]" : ""
-          }`}
-        >
-          {/* Top Pointer */}
-          <div className="absolute -top-1 left-1/2 -translate-x-1/2 border-x-[8px] border-x-transparent border-t-[12px] border-t-fg drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" />
-          {/* Bottom Pointer */}
-          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 border-x-[8px] border-x-transparent border-b-[12px] border-b-fg drop-shadow-[0_-2px_4px_rgba(0,0,0,0.8)]" />
-        </div>
+        {/* Center Solid Static Needle */}
+        <div className="pointer-events-none absolute left-1/2 top-0 bottom-0 z-30 w-[3px] -translate-x-1/2 bg-fg opacity-90 shadow-[0_0_10px_rgba(255,255,255,0.3)]" />
 
         {/* Vignette Shadow Gradients on Left and Right edges */}
         <div className="pointer-events-none absolute inset-y-0 left-0 z-20 w-16 sm:w-24 bg-gradient-to-r from-bg via-bg/80 to-transparent" />
@@ -304,7 +295,7 @@ export function CsgoReel({
 
                 {/* Center Sector Name with Bold Grotesk Typography */}
                 <div className="my-auto flex flex-col gap-1 text-center px-1">
-                  <span className="display text-xs sm:text-sm font-bold uppercase leading-tight tracking-tight text-fg line-clamp-2">
+                  <span className="display text-xs sm:text-sm font-bold uppercase leading-tight tracking-tight text-fg ">
                     {item.sector.label}
                   </span>
                   <span className="text-[9px] font-mono text-muted uppercase tracking-wider">

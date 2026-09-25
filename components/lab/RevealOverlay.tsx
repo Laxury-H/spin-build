@@ -54,8 +54,8 @@ export function RevealOverlay({
           {rows.map(([k, v], i) => (
             <div key={k} className="label flex justify-between gap-4 border-b border-line py-2">
               <dt className="text-muted">{k}</dt>
-              <dd className="truncate text-fg">
-                {step >= 1 ? <ScrambleText text={v} delay={i * 120} duration={380} /> : null}
+              <dd className="text-fg break-words text-right">
+                {step >= 1 ? <span>{v}</span> : null}
               </dd>
             </div>
           ))}
