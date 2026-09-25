@@ -568,3 +568,7 @@ export type { DailyPlan } from "./daily";
 export { synthesizeConcept } from "./synthesize";
 export { scoreBoringness, BORING_THRESHOLD } from "./boring";
 export { buildBrief, briefToPrompt, ideaToText, ideaShareText } from "./brief";
+
+export { buildNeuralGraph } from "./graph";
+export type { NeuralGraph, GraphNode, GraphEdge } from "./graph";
+
