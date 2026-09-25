@@ -236,7 +236,9 @@ export function NeuralGraphView({ idea }: { idea: Idea }) {
   if (!graph) return null;
 
   return (
-    <div className="flex flex-col border border-line bg-surface/30 p-1">
+    <div className="flex flex-col border border-line bg-surface/10 backdrop-blur-md p-1 relative overflow-hidden shadow-2xl">
+      {/* Glow effect */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,var(--color-fg)_0%,transparent_100%)] opacity-[0.02]" />
       <div className="flex justify-between items-center p-3 border-b border-line bg-bg/50">
         <div className="flex items-center gap-2">
           <span className="h-1.5 w-1.5 bg-fg rounded-full animate-pulse" />

@@ -286,9 +286,9 @@ export function SpinLab() {
           )}
         </section>
 
-        <aside className="flex flex-col gap-6 lg:col-span-3" aria-label="Thông số hệ thống">
-          <dl className="flex flex-col border-t border-line">
-            <Row label={t("trend_engine")}>
+        <aside className="flex flex-col gap-6 lg:col-span-3" aria-label="System Telemetry">
+          <dl className="flex flex-col border border-line bg-surface/20 backdrop-blur-sm p-4 hover:border-line-strong transition-colors">
+            <Row label={t("trend_engine")} first>
               <TrendEngineStatus bare />
             </Row>
             <Row label={t("pool_size")}>
@@ -308,7 +308,7 @@ export function SpinLab() {
           <ChaosSlider />
 
           {injectedTrend && (
-            <div className="flex items-center justify-between border border-line-strong bg-surface/50 p-3">
+            <div className="flex items-center justify-between border border-line bg-surface/20 backdrop-blur-sm p-4">
               <div className="flex flex-col gap-0.5">
                 <span className="label text-muted text-[10px]">{t("injected_trend")}</span>
                 <span className="font-mono text-xs font-bold text-fg uppercase truncate max-w-[180px]">
@@ -327,7 +327,7 @@ export function SpinLab() {
           )}
 
           {locks.length > 0 && (
-            <div className="flex items-start justify-between gap-3 border border-line p-3 bg-surface/30">
+            <div className="flex items-start justify-between gap-3 border border-line bg-surface/20 backdrop-blur-sm p-4">
               <div className="flex flex-col gap-1">
                 <span className="label text-muted text-[10px]">{t("locked_genes")}</span>
                 <span className="label text-fg font-mono text-xs">{locks.map((k) => DNA_LABEL[k]).join(" · ")}</span>
@@ -345,9 +345,9 @@ export function SpinLab() {
   );
 }
 
-function Row({ label, children }: { label: string; children: ReactNode }) {
+function Row({ label, children, first }: { label: string; children: ReactNode; first?: boolean }) {
   return (
-    <div className="flex min-h-11 items-center justify-between gap-4 border-b border-line py-2">
+    <div className={cn("flex min-h-11 items-center justify-between gap-4 py-2", !first && "border-t border-line/50")}>
       <dt className="label text-muted text-[10px] font-mono tracking-wider">{label}</dt>
       <dd className="label text-right text-fg text-xs font-mono">{children}</dd>
     </div>

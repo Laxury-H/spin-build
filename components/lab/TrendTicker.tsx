@@ -1,6 +1,7 @@
 "use client";
 
 import { useSpin } from "@/lib/store";
+import { useTranslation } from "@/lib/ui/useTranslation";
 import { toast } from "@/lib/ui/toast";
 import type { Trend } from "@/types";
 
@@ -9,13 +10,14 @@ export function TrendTicker() {
   const trends = useSpin((s) => s.trends.trends);
   const injectedTrend = useSpin((s) => s.injectedTrend);
   const injectTrend = useSpin((s) => s.injectTrend);
+  const { t } = useTranslation();
 
   const list = trends.slice(0, 18);
   if (list.length === 0) return null;
 
   const inject = (t: Trend) => {
     injectTrend(t);
-    toast(`Đã chọn // ${t.title.toUpperCase()}`, { detail: "Xu hướng này sẽ vào lần quay tới" });
+    toast(`TARGET LOCKED // ${t.title.toUpperCase()}`);
   };
 
   const items = (copy: number) =>
@@ -29,15 +31,15 @@ export function TrendTicker() {
         className={`label shrink-0 px-5 transition-colors hover:text-fg ${
           injectedTrend?.id === t.id ? "text-fg underline underline-offset-4" : "text-muted"
         }`}
-        title={`Đưa “${t.title}” vào lần quay tới`}
+        title={`Inject ${t.title}`}
       >
         {t.title}
       </button>
     ));
 
   return (
-    <div className="flex h-10 shrink-0 items-center border-t border-line">
-      <span className="label flex h-full shrink-0 items-center border-r border-line px-4 text-fg md:px-8">Đang nóng</span>
+    <div className="flex h-10 shrink-0 items-center border-t border-line/50 bg-bg/50 backdrop-blur-md relative z-10">
+      <span className="label flex h-full shrink-0 items-center border-r border-line/30 px-4 text-fg md:px-8 bg-surface/20 backdrop-blur-sm">LIVE TRENDS</span>
       <div className="relative flex-1 overflow-hidden">
         <div className="flex w-max animate-[ticker_80s_linear_infinite] hover:[animation-play-state:paused] motion-reduce:animate-none">
           {items(0)}

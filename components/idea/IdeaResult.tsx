@@ -99,7 +99,8 @@ export function IdeaResult({ idea, mode, revealKey, onOpenInLab, className, eyeb
         )}
       </div>
 
-      <div className="mt-8 grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-8 border-t border-line pt-8">
+      <div className="relative mt-8 grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-8 border-t border-line pt-8">
+        <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,var(--color-fg)_0%,transparent_50%)] opacity-[0.03] blur-3xl" />
         
         {/* Main Concept View */}
         <div className="flex flex-col gap-10 lg:order-2 lg:col-span-8">
@@ -113,7 +114,7 @@ export function IdeaResult({ idea, mode, revealKey, onOpenInLab, className, eyeb
             </p>
           </div>
 
-          <div className="grid grid-cols-1 border-t border-line md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <Section title={t("diff_hook")} className="md:col-span-2">
               <p className="text-base font-medium leading-relaxed text-fg">{c.hook}</p>
             </Section>
@@ -133,7 +134,7 @@ export function IdeaResult({ idea, mode, revealKey, onOpenInLab, className, eyeb
               </ol>
             </Section>
             
-            <Section title={t("mvp_features")} className="md:border-l md:border-line md:pl-6">
+            <Section title={t("mvp_features")} >
               <ul className="flex flex-col gap-2.5">
                 {c.mvp.map((item, i) => (
                   <li key={i} className="flex gap-3 text-sm leading-relaxed">
@@ -183,7 +184,7 @@ export function IdeaResult({ idea, mode, revealKey, onOpenInLab, className, eyeb
               {lab && <span>{locks.length}/6 {t("locked_count")}</span>}
             </div>
             
-            <ul className="border-t border-line">
+            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
               {DNA_KEYS.map((key, i) => {
                 const locked = lab && locks.includes(key);
                 const { value, detail } = geneValue(idea, key);
@@ -200,9 +201,9 @@ export function IdeaResult({ idea, mode, revealKey, onOpenInLab, className, eyeb
                   >
                     <span
                       aria-hidden="true"
-                      className={cn("absolute inset-y-0 left-0 bg-fg transition-[width] duration-150", locked ? "w-[2px]" : "w-0")}
+                      className={cn("absolute top-0 left-0 h-[2px] bg-fg transition-all duration-300", locked ? "w-full" : "w-0")}
                     />
-                    <span className="label w-5 shrink-0 pt-0.5 text-subtle font-mono">{String(i + 1).padStart(2, "0")}</span>
+                    
                     <div className="flex min-w-0 flex-1 flex-col gap-1">
                       <span className="label text-[9px] text-muted tracking-widest uppercase">{t(geneKey)}</span>
                       <span className="truncate text-sm font-bold uppercase leading-tight tracking-[-0.01em]">

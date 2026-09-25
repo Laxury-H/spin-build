@@ -37,7 +37,7 @@ export function SiteHeader() {
     setMenuFor((typeof v === "function" ? v(menuOpen) : v) ? pathname : null);
 
   return (
-    <header className="sticky top-0 z-40 h-14 w-full border-b border-line bg-bg/95 backdrop-blur-xs">
+    <header className="sticky top-0 z-40 h-14 w-full border-b border-line/50 bg-bg/70 backdrop-blur-xl supports-[backdrop-filter]:bg-bg/60">
       <div className="mx-auto flex h-full max-w-[1400px] items-center justify-between gap-6 px-4 md:px-8">
         <div className="flex items-center gap-10">
           <Link href="/" className="font-sans text-[15px] font-semibold tracking-[-0.02em] uppercase" aria-label="SPIN//BUILD — Trang chủ">
