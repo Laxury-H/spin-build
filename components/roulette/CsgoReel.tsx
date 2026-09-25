@@ -183,6 +183,12 @@ export function CsgoReel({
       const currentSlot = Math.floor(centerDistFromTrackStart / STEP);
 
       if (currentSlot !== lastCrossedSlot && currentSlot >= 0 && currentSlot < TOTAL_SLOTS) {
+        if (lastCrossedSlot >= 0 && trackRef.current) {
+          trackRef.current.children[lastCrossedSlot]?.classList.remove("passing-glow");
+        }
+        if (trackRef.current) {
+          trackRef.current.children[currentSlot]?.classList.add("passing-glow");
+        }
         lastCrossedSlot = currentSlot;
         setNeedleTick(true);
         setTimeout(() => setNeedleTick(false), 40);
@@ -202,6 +208,9 @@ export function CsgoReel({
         animId = requestAnimationFrame(animate);
       } else {
         setIsSpinning(false);
+        if (trackRef.current) {
+          Array.from(trackRef.current.children).forEach(c => c.classList.remove("passing-glow"));
+        }
         if (audio) {
           playCsgoSettle();
         }

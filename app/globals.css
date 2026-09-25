@@ -203,3 +203,24 @@ input[type="range"].range::-moz-range-thumb {
     scroll-behavior: auto !important;
   }
 }
+
+
+/* Emission glow for roulette active states */
+.passing-glow {
+  background-color: var(--fg) !important;
+  color: var(--bg) !important;
+  border-color: var(--fg) !important;
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.8) !important;
+  transform: scale(1.05) !important;
+  z-index: 50 !important;
+}
+.passing-glow span, .passing-glow div {
+  color: var(--bg) !important;
+  border-color: var(--bg) !important;
+}
+
+
+.passing-wedge {
+  fill: var(--fg) !important;
+  filter: drop-shadow(0 0 12px rgba(255, 255, 255, 1)) !important;
+}

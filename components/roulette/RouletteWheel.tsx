@@ -53,7 +53,15 @@ export function RouletteWheel({
   const labelEls = useRef<(SVGTextElement | null)[]>([]);
   const numEls = useRef<(SVGTextElement | null)[]>([]);
   const paint = useCallback((idx: number | null) => {
-    wedgeEls.current.forEach((el, i) => el?.setAttribute("fill", i === idx ? "var(--fg)" : "transparent"));
+    wedgeEls.current.forEach((el, i) => {
+        if (i === idx) {
+          el?.classList.add("passing-wedge");
+          el?.setAttribute("fill", "var(--fg)");
+        } else {
+          el?.classList.remove("passing-wedge");
+          el?.setAttribute("fill", "transparent");
+        }
+      });
     labelEls.current.forEach((el, i) => el?.setAttribute("fill", i === idx ? "var(--bg)" : "var(--fg)"));
     numEls.current.forEach((el, i) => el?.setAttribute("fill", i === idx ? "var(--bg)" : "var(--muted)"));
   }, []);
