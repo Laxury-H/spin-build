@@ -377,7 +377,7 @@ export function RouletteWheel({
         onClick={handleHubClick}
         onPointerDown={(e) => e.stopPropagation()}
         disabled={disabled}
-        aria-label="Quay vòng quay"
+        aria-label="Spin"
         className="absolute left-1/2 top-1/2 flex aspect-square w-[27%] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full bg-fg text-bg outline-offset-4 transition-transform duration-150 ease-out hover:scale-[1.03] active:scale-[0.97] disabled:cursor-default disabled:hover:scale-100"
       >
         <span className="font-sans text-[max(16px,6cqw)] font-semibold uppercase leading-none tracking-[-0.03em]">

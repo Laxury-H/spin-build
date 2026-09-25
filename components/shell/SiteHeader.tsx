@@ -40,11 +40,11 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 h-14 w-full border-b border-line/50 bg-bg/70 backdrop-blur-xl supports-[backdrop-filter]:bg-bg/60">
       <div className="mx-auto flex h-full max-w-[1400px] items-center justify-between gap-6 px-4 md:px-8">
         <div className="flex items-center gap-10">
-          <Link href="/" className="font-sans text-[15px] font-semibold tracking-[-0.02em] uppercase" aria-label="SPIN//BUILD — Trang chủ">
+          <Link href="/" className="font-sans text-[15px] font-semibold tracking-[-0.02em] uppercase" aria-label={t("home")}>
             SPIN<span className="text-muted">{"//"}</span>BUILD
           </Link>
 
-          <nav className="hidden items-center gap-7 lg:flex" aria-label="Điều hướng chính">
+          <nav className="hidden items-center gap-7 lg:flex" aria-label={t("main_nav")}>
             {NAV_KEYS.map((link) => {
               const active = pathname === link.href || pathname.startsWith(`${link.href}/`);
               return (
@@ -116,7 +116,7 @@ export function SiteHeader() {
 
       {menuOpen && (
         <div className="fixed inset-x-0 bottom-0 top-14 z-50 flex flex-col justify-between overflow-y-auto bg-bg px-6 py-8 lg:hidden">
-          <nav className="flex flex-col border-t border-line" aria-label="Điều hướng">
+          <nav className="flex flex-col border-t border-line" aria-label={t("nav")}>
             {[{ href: "/", key: "lab_ready" as const }, ...NAV_KEYS].map((link) => (
               <Link
                 key={link.href}

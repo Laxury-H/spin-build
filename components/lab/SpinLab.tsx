@@ -181,7 +181,7 @@ export function SpinLab() {
             </p>
           </div>
 
-          <nav className="hidden flex-col border-t border-line lg:flex" aria-label="Lối tắt">
+          <nav className="hidden flex-col border-t border-line lg:flex" aria-label={t("shortcut_nav")}>
             <RailLink href="/daily">DAILY SEED // {today !== null ? String(today).padStart(4, "0") : "····"}</RailLink>
             <RailLink href="/fuse">{t("nav_fuse")}</RailLink>
             <button
@@ -200,7 +200,7 @@ export function SpinLab() {
           </nav>
         </section>
 
-        <section className="flex flex-col items-center justify-center gap-4 lg:col-span-6" aria-label="Khu vực quay ý tưởng">
+        <section className="flex flex-col items-center justify-center gap-4 lg:col-span-6" aria-label={t("spin_area")}>
           <div className="flex w-full items-center justify-between gap-4">
             <div className="label flex h-4 items-center gap-2 text-muted font-mono text-[10px]" aria-hidden="true">
               <span>▼</span>
@@ -286,7 +286,7 @@ export function SpinLab() {
           )}
         </section>
 
-        <aside className="flex flex-col gap-6 lg:col-span-3" aria-label="System Telemetry">
+        <aside className="flex flex-col gap-6 lg:col-span-3" aria-label={t("system_params")}>
           <dl className="flex flex-col border border-line bg-surface/20 backdrop-blur-sm p-4 hover:border-line-strong transition-colors">
             <Row label={t("trend_engine")} first>
               <TrendEngineStatus bare />
@@ -318,7 +318,7 @@ export function SpinLab() {
               <button
                 type="button"
                 onClick={() => injectTrend(null)}
-                aria-label="Hủy chèn xu hướng"
+                aria-label={t("cancel_trend")}
                 className="label text-muted hover:text-fg text-sm px-2 py-1"
               >
                 ✕

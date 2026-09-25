@@ -1,4 +1,6 @@
-"use client";
+const fs = require('fs');
+
+const content = `"use client";
 
 import Link from "next/link";
 import { CHAOS_BANDS } from "@/types";
@@ -146,3 +148,6 @@ export default function AboutPage() {
     </main>
   );
 }
+`;
+
+fs.writeFileSync('app/about/page.tsx', content);

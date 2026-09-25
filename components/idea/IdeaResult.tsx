@@ -174,7 +174,7 @@ export function IdeaResult({ idea, mode, revealKey, onOpenInLab, className, eyeb
         </div>
 
         {/* DNA Graph & Breakdown */}
-        <aside className="lg:order-1 lg:col-span-4 flex flex-col gap-6" aria-label="Cấu trúc liên kết ý tưởng">
+        <aside className="lg:order-1 lg:col-span-4 flex flex-col gap-6" aria-label={t("dna_structure")}>
           
           <NeuralGraphView idea={idea} />
 
