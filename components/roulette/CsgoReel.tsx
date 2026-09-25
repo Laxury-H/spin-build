@@ -29,41 +29,11 @@ export interface RarityConfig {
 }
 
 export const RARITY_CONFIGS: Record<RarityTier, RarityConfig> = {
-  GOLD: {
-    tier: "GOLD",
-    label: "★ EXCEEDINGLY RARE",
-    color: "#eab308",
-    bgGlow: "rgba(234, 179, 8, 0.15)",
-    borderClass: "border-yellow-500",
-  },
-  COVERT: {
-    tier: "COVERT",
-    label: "COVERT",
-    color: "#ef4444",
-    bgGlow: "rgba(239, 68, 68, 0.12)",
-    borderClass: "border-red-500",
-  },
-  CLASSIFIED: {
-    tier: "CLASSIFIED",
-    label: "CLASSIFIED",
-    color: "#ec4899",
-    bgGlow: "rgba(236, 72, 153, 0.12)",
-    borderClass: "border-pink-500",
-  },
-  RESTRICTED: {
-    tier: "RESTRICTED",
-    label: "RESTRICTED",
-    color: "#a855f7",
-    bgGlow: "rgba(168, 85, 247, 0.12)",
-    borderClass: "border-purple-500",
-  },
-  MILSPEC: {
-    tier: "MILSPEC",
-    label: "MIL-SPEC",
-    color: "#3b82f6",
-    bgGlow: "rgba(59, 130, 246, 0.12)",
-    borderClass: "border-blue-500",
-  },
+  GOLD: { tier: "GOLD", label: "★ EXCEEDINGLY RARE", color: "var(--fg)", bgGlow: "transparent", borderClass: "border-fg" },
+  COVERT: { tier: "COVERT", label: "COVERT", color: "var(--fg)", bgGlow: "transparent", borderClass: "border-line-strong" },
+  CLASSIFIED: { tier: "CLASSIFIED", label: "CLASSIFIED", color: "var(--fg)", bgGlow: "transparent", borderClass: "border-line" },
+  RESTRICTED: { tier: "RESTRICTED", label: "RESTRICTED", color: "var(--muted)", bgGlow: "transparent", borderClass: "border-line/50" },
+  MILSPEC: { tier: "MILSPEC", label: "MIL-SPEC", color: "var(--muted)", bgGlow: "transparent", borderClass: "border-line/20" },
 };
 
 /** Map sector indexes (0-17) to CS:GO weapon case rarity tiers */
@@ -259,8 +229,8 @@ export function CsgoReel({
       {/* Top Telemetry Header */}
       <div className="flex w-full items-center justify-between border-b border-line pb-2.5 mb-3 text-[10px] font-mono tracking-wider text-muted">
         <div className="flex items-center gap-2">
-          <span className={`inline-block h-2 w-2 rounded-full ${isSpinning ? "bg-amber-400 animate-ping" : "bg-emerald-500"}`} />
-          <span className="text-fg font-bold uppercase">CS:GO CASE OPENING // SECTOR ROULETTE</span>
+          <span className={`inline-block h-2 w-2 rounded-full ${isSpinning ? "bg-fg animate-ping" : "bg-fg/50"}`} />
+          <span className="text-fg font-bold uppercase">SECTOR ROULETTE</span>
         </div>
         <div className="flex items-center gap-3">
           <span>CONTAINER: 18 SECTORS</span>
@@ -278,14 +248,14 @@ export function CsgoReel({
 
         {/* Center Vertical Target Needle with CS:GO Gold/Yellow Highlight */}
         <div
-          className={`pointer-events-none absolute left-1/2 top-0 bottom-0 z-30 w-[2px] -translate-x-1/2 bg-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.9)] transition-transform duration-75 ${
+          className={`pointer-events-none absolute left-1/2 top-0 bottom-0 z-30 w-[2px] -translate-x-1/2 bg-fg shadow-[0_0_12px_rgba(255,255,255,0.9)] transition-transform duration-75 ${
             needleTick ? "scale-y-110 brightness-150" : ""
           }`}
         >
           {/* Top Pointer */}
-          <div className="absolute -top-1 left-1/2 -translate-x-1/2 border-x-[8px] border-x-transparent border-t-[12px] border-t-amber-400 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" />
+          <div className="absolute -top-1 left-1/2 -translate-x-1/2 border-x-[8px] border-x-transparent border-t-[12px] border-t-fg drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" />
           {/* Bottom Pointer */}
-          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 border-x-[8px] border-x-transparent border-b-[12px] border-b-amber-400 drop-shadow-[0_-2px_4px_rgba(0,0,0,0.8)]" />
+          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 border-x-[8px] border-x-transparent border-b-[12px] border-b-fg drop-shadow-[0_-2px_4px_rgba(0,0,0,0.8)]" />
         </div>
 
         {/* Vignette Shadow Gradients on Left and Right edges */}
@@ -306,7 +276,7 @@ export function CsgoReel({
                 style={{ width: `${CARD_WIDTH}px` }}
                 className={`relative shrink-0 h-[154px] sm:h-[168px] flex flex-col justify-between border bg-surface/90 p-3 transition-all duration-300 ${
                   isWinner
-                    ? "border-amber-400 scale-[1.04] shadow-[0_0_24px_rgba(245,158,11,0.5)] z-20 bg-amber-500/10"
+                    ? "border-fg scale-[1.04] shadow-[0_0_24px_rgba(255,255,255,0.5)] z-20 bg-fg/10"
                     : `${item.rarity.borderClass} opacity-85 hover:opacity-100`
                 }`}
               >
