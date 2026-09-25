@@ -2,9 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Idea } from "@/types";
+import { useTranslation } from "@/lib/ui/useTranslation";
 import { buildNeuralGraph, type NeuralGraph, type GraphNode } from "@/lib/generator/graph";
 
 export function NeuralGraphView({ idea }: { idea: Idea }) {
+  const { t } = useTranslation();
   const [graph, setGraph] = useState<NeuralGraph | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -238,25 +240,26 @@ export function NeuralGraphView({ idea }: { idea: Idea }) {
       <div className="flex justify-between items-center p-3 border-b border-line bg-bg/50">
         <div className="flex items-center gap-2">
           <span className="h-1.5 w-1.5 bg-fg rounded-full animate-pulse" />
-          <span className="label font-mono text-[10px] tracking-wider text-muted">NEURAL KNOWLEDGE GRAPH</span>
+          <span className="label font-mono text-[10px] tracking-wider text-muted">{t("neural_graph")}</span>
         </div>
         <div className="flex gap-4">
           <span className="label font-mono text-[10px] text-subtle">
-            COHERENCE: <span className="text-fg font-bold">{Math.round(graph.coherence * 100)}%</span>
+            {t("coherence")}: <span className="text-fg font-bold">{Math.round(graph.coherence * 100)}%</span>
           </span>
           <span className="label font-mono text-[10px] text-subtle">
-            NODES: <span className="text-fg font-bold">{graph.nodes.length}</span>
+            {t("nodes")}: <span className="text-fg font-bold">{graph.nodes.length}</span>
           </span>
         </div>
       </div>
       <div ref={containerRef} className="relative w-full h-[300px] overflow-hidden bg-[#050505]">
         <canvas ref={canvasRef} className="block" />
         <div className="absolute bottom-2 left-3 flex flex-col gap-1 pointer-events-none">
-          <span className="font-mono text-[9px] text-muted flex items-center gap-1.5"><span className="w-3 h-[1.5px] bg-fg/30 block" /> SYNERGY (TAG MATCH)</span>
-          <span className="font-mono text-[9px] text-muted flex items-center gap-1.5"><span className="w-3 h-[1px] bg-fg/20 block border-t border-dashed border-fg/40" /> CONTRAST (CHAOS GAP)</span>
-          <span className="font-mono text-[9px] text-muted flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full border border-fg/40 block" /> LATERAL MUTATION</span>
+          <span className="font-mono text-[9px] text-muted flex items-center gap-1.5"><span className="w-3 h-[1.5px] bg-fg/30 block" /> {t("synergy")}</span>
+          <span className="font-mono text-[9px] text-muted flex items-center gap-1.5"><span className="w-3 h-[1px] bg-fg/20 block border-t border-dashed border-fg/40" /> {t("contrast")}</span>
+          <span className="font-mono text-[9px] text-muted flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full border border-fg/40 block" /> {t("lateral")}</span>
         </div>
       </div>
     </div>
   );
 }
+

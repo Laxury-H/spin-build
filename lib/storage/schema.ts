@@ -37,6 +37,7 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = Object.freeze({
   chaos: 42,
   region: "GLOBAL",
   audio: false,
+  lang: "vi",
 });
 
 /** Chaos is an integer dial, 0–100. Non-finite input falls back to `fallback`. */
@@ -225,6 +226,7 @@ export const settingsSchema = z.object({
   chaos: z.number().catch(DEFAULT_SETTINGS.chaos).transform((n) => clampChaos(n)),
   region: regionSchema.catch(DEFAULT_SETTINGS.region),
   audio: z.boolean().catch(DEFAULT_SETTINGS.audio),
+  lang: z.enum(["vi", "en"]).catch(DEFAULT_SETTINGS.lang as "vi" | "en"),
 });
 
 /* ── Parsers (never throw) ────────────────────────────────────────────────── */

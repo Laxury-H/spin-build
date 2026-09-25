@@ -85,6 +85,7 @@ export interface SpinState {
   chaos: number;
   region: Region;
   audio: boolean;
+  lang: "vi" | "en";
   /** Starts as the curated fallback for GLOBAL, replaced by live data when it arrives. */
   trends: TrendSnapshot;
   trendSync: TrendSync;
@@ -119,6 +120,7 @@ export interface SpinActions {
   setChaos(n: number): void;
   setRegion(r: Region): void;
   setAudio(on: boolean): void;
+  setLang(lang: "vi" | "en"): void;
   /** Never throws; keeps the current (fallback) trends when the fetch fails. */
   refreshTrends(opts?: { force?: boolean }): Promise<void>;
   /** Show an idea directly as "result" (FUSE, DAILY, shared links, history). Records by default. */
@@ -164,6 +166,7 @@ function initialState(): SpinState {
     chaos: DEFAULT_SETTINGS.chaos,
     region: DEFAULT_SETTINGS.region,
     audio: DEFAULT_SETTINGS.audio,
+    lang: DEFAULT_SETTINGS.lang,
     trends: fallbackSnapshot(DEFAULT_SETTINGS.region),
     trendSync: "idle",
     spark: null,
@@ -244,8 +247,8 @@ export function createSpinStore(options: SpinStoreOptions = {}): UseBoundStore<S
     /* Settings persistence */
 
     function enqueueSettings(): void {
-      const { chaos, region, audio } = get();
-      const settings: Settings = { chaos, region, audio };
+      const { chaos, region, audio, lang } = get();
+      const settings: Settings = { chaos, region, audio, lang };
       queue.enqueue("settings", () => storage().putSettings(settings));
     }
 
@@ -393,6 +396,7 @@ export function createSpinStore(options: SpinStoreOptions = {}): UseBoundStore<S
           chaos: touchedSettings.has("chaos") ? state.chaos : base.chaos,
           region: touchedSettings.has("region") ? state.region : base.region,
           audio: touchedSettings.has("audio") ? state.audio : base.audio,
+          lang: touchedSettings.has("lang") ? state.lang : base.lang,
         };
         set({
           ...settings,
@@ -562,6 +566,12 @@ export function createSpinStore(options: SpinStoreOptions = {}): UseBoundStore<S
         set({ region, trends: liveSnapshots.get(region) ?? fallbackSnapshot(region) });
         touchSetting("region");
         void get().refreshTrends();
+      },
+
+      setLang(lang) {
+        if (get().lang === lang) return;
+        set({ lang });
+        touchSetting("lang");
       },
 
       setAudio(on) {

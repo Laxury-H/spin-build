@@ -21,11 +21,13 @@ import { Button } from "@/components/ui/Button";
 import { ArrowRightIcon } from "@/components/ui/icons";
 import { useHydrated, useReducedMotion } from "@/lib/hooks";
 import { cn } from "@/lib/ui/cn";
+import { useTranslation } from "@/lib/ui/useTranslation";
 
 export function SpinLab() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const overlay = useOverlay();
+  const { t } = useTranslation();
 
   const phase = useSpin((s) => s.phase);
   const spinId = useSpin((s) => s.spinId);
@@ -50,7 +52,6 @@ export function SpinLab() {
   const reducedMotion = useReducedMotion();
   const [spinMode, setSpinMode] = useState<"csgo" | "wheel">("csgo");
 
-  // Sector readout above the selector, written directly on every tick (no re-render).
   const readoutRef = useRef<HTMLSpanElement>(null);
   const handleTick = useCallback((i: number) => {
     const s = SECTORS[i];
@@ -64,7 +65,6 @@ export function SpinLab() {
     [current],
   );
 
-  // ?cmd=spin|cursed|randomize (sent by the command palette from other pages)
   useEffect(() => {
     const cmd = searchParams.get("cmd");
     if (!cmd) return;
@@ -77,7 +77,6 @@ export function SpinLab() {
     router.replace("/");
   }, [searchParams, router, spin, clearLocks]);
 
-  // Navigated away mid-spin? The wheel remounts idle, so jump straight to the result.
   useEffect(() => {
     const { phase: p, skipToResult: skip } = useSpin.getState();
     if (p === "spinning" || p === "revealing") skip();
@@ -88,7 +87,6 @@ export function SpinLab() {
     settle();
   }, [settle]);
 
-  // The wheel stays mounted behind the result view, so a fresh spin just works.
   const spinFresh = useCallback(() => spin(), [spin]);
 
   useHotkeys({
@@ -142,20 +140,17 @@ export function SpinLab() {
               onClick={backToWheel}
               className="label flex items-center gap-2 text-muted transition-colors hover:text-fg font-mono text-xs"
             >
-              <span aria-hidden="true">←</span> VỀ PHÒNG QUAY LAB <Kbd>ESC</Kbd>
+              <span aria-hidden="true">←</span> {t("back_to_lab")} <Kbd>ESC</Kbd>
             </button>
-            <div className="label hidden items-center gap-4 text-muted sm:flex text-xs font-mono">
+            <div className="label hidden items-center gap-4 text-muted sm:flex text-[10px] font-mono tracking-wider">
               <span className="flex items-center gap-1.5">
-                <Kbd>SPACE</Kbd> QUAY MỚI
+                <Kbd>SPACE</Kbd> {t("spin_btn")}
               </span>
               <span className="flex items-center gap-1.5">
-                <Kbd>R</Kbd> QUAY MẢNH MỞ
+                <Kbd>R</Kbd> {t("reroll_btn")}
               </span>
               <span className="flex items-center gap-1.5">
-                <Kbd>1–6</Kbd> GHIM GEN
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Kbd>B</Kbd> BRIEF
+                <Kbd>1–6</Kbd> {t("gene_constraint")} (TOGGLE)
               </span>
             </div>
           </div>
@@ -164,79 +159,76 @@ export function SpinLab() {
       )}
 
       <div className={`${showResult ? "hidden" : "grid"} mx-auto w-full max-w-[1400px] flex-1 grid-cols-1 gap-8 px-4 py-6 md:px-8 lg:grid-cols-12 lg:gap-6 lg:py-8`}>
-        {/* Left rail: hero */}
         <section className="flex flex-col justify-between gap-8 lg:col-span-3">
           <div className="flex flex-col gap-6">
             <div className="flex items-center gap-2">
-              <span className="h-2 w-2 bg-amber-400 inline-block animate-pulse" />
-              <span className="label font-mono text-xs text-muted tracking-wider">LAB // CS:GO UNBOX READY</span>
+              <span className="h-1.5 w-1.5 bg-fg rounded-full" />
+              <span className="label font-mono text-[10px] text-muted tracking-widest uppercase">{t("lab_active")}</span>
             </div>
-            <h1 className="display text-[clamp(2.2rem,3vw,3.4rem)] tracking-tight">
-              BUILD SOMETHING
+            <h1 className="display text-[clamp(2.2rem,3vw,3.4rem)] tracking-tight leading-[1]">
+              {t("hero_title_1")}
               <br />
-              THAT SHOULDN&apos;T
+              {t("hero_title_2")}
               <br />
-              EXIST.
+              {t("hero_title_3")}
             </h1>
             <p className="font-mono text-xs leading-6 text-muted">
-              XU HƯỚNG THỜI GIAN THỰC.
+              {t("hero_desc_1")}
               <br />
-              NGẪU NHIÊN CÓ KIỂM SOÁT.
+              {t("hero_desc_2")}
               <br />
-              ĐỘT PHÁ NGOÀI KHUÔN KHỔ.
+              {t("hero_desc_3")}
             </p>
           </div>
 
           <nav className="hidden flex-col border-t border-line lg:flex" aria-label="Lối tắt">
             <RailLink href="/daily">DAILY SEED // {today !== null ? String(today).padStart(4, "0") : "····"}</RailLink>
-            <RailLink href="/fuse">LAI TẠO Ý TƯỞNG (FUSE LAB)</RailLink>
+            <RailLink href="/fuse">{t("nav_fuse")}</RailLink>
             <button
               type="button"
               onClick={() => overlay.show("palette")}
               className="label flex items-center justify-between border-b border-line py-3 text-muted transition-colors hover:text-fg font-mono text-xs"
             >
-              <span>BẢNG LỆNH TẬP TRUNG</span>
+              <span>{t("command_palette")}</span>
               <Kbd>⌘K</Kbd>
             </button>
-            <p className="label mt-6 leading-5 text-subtle font-mono text-[11px]">
-              LĨNH VỰC × ĐỐI TƯỢNG × CƠ CHẾ
-              <br />× XU HƯỚNG × CHAOS × RÀNG BUỘC
-              <br />= Ý TƯỞNG SẢN PHẨM MỚI
+            <p className="label mt-6 leading-5 text-subtle font-mono text-[9px] uppercase tracking-widest">
+              {t("gene_domain")} × {t("gene_target")} × {t("gene_mechanic")}
+              <br />× {t("gene_trend")} × {t("gene_chaos")} × {t("gene_constraint")}
+              <br />= {t("hero_title_1")}
             </p>
           </nav>
         </section>
 
-        {/* Center: CS:GO Reel or Roulette Wheel */}
         <section className="flex flex-col items-center justify-center gap-4 lg:col-span-6" aria-label="Khu vực quay ý tưởng">
           <div className="flex w-full items-center justify-between gap-4">
-            <div className="label flex h-4 items-center gap-2 text-muted font-mono text-xs" aria-hidden="true">
+            <div className="label flex h-4 items-center gap-2 text-muted font-mono text-[10px]" aria-hidden="true">
               <span>▼</span>
-              <span ref={readoutRef} className="tabular whitespace-pre text-fg font-bold tracking-wider">
-                --  SẴN SÀNG QUAY
+              <span ref={readoutRef} className="tabular whitespace-pre text-fg font-bold tracking-widest">
+                {t("ready_to_spin")}
               </span>
             </div>
 
-            {/* Mode Switcher */}
-            <div className="flex items-center border border-line bg-surface/50 p-0.5" role="group" aria-label="Chế độ quay">
+            <div className="flex items-center border border-line bg-surface/50 p-0.5" role="group">
               <button
                 type="button"
                 onClick={() => setSpinMode("csgo")}
                 className={cn(
-                  "px-2.5 py-1 text-[10px] font-mono font-bold tracking-wider transition-colors",
-                  spinMode === "csgo" ? "bg-amber-400 text-black font-extrabold shadow-sm" : "text-muted hover:text-fg"
+                  "px-2.5 py-1 text-[9px] font-mono tracking-widest transition-colors",
+                  spinMode === "csgo" ? "bg-fg text-bg font-bold shadow-sm" : "text-muted hover:text-fg"
                 )}
               >
-                [ ▬ CS:GO REEL ]
+                [ CONCEPT STRIP ]
               </button>
               <button
                 type="button"
                 onClick={() => setSpinMode("wheel")}
                 className={cn(
-                  "px-2.5 py-1 text-[10px] font-mono font-bold tracking-wider transition-colors",
-                  spinMode === "wheel" ? "bg-fg text-bg" : "text-muted hover:text-fg"
+                  "px-2.5 py-1 text-[9px] font-mono tracking-widest transition-colors",
+                  spinMode === "wheel" ? "bg-fg text-bg font-bold shadow-sm" : "text-muted hover:text-fg"
                 )}
               >
-                [ ◯ WHEEL ]
+                [ RADAR WHEEL ]
               </button>
             </div>
           </div>
@@ -280,36 +272,35 @@ export function SpinLab() {
             </div>
           )}
 
-          <p className="label flex items-center gap-2 text-muted pointer-coarse:hidden font-mono text-xs">
-            <Kbd>SPACE</Kbd> ĐỂ QUAY {spinMode === "wheel" ? "· HOẶC NHẤP VÀO TÂM / VUỐT BÁNH XE" : "· HOẶC NHẤP MỞ HÒM Ý TƯỞNG"}
+          <p className="label flex items-center gap-2 text-muted pointer-coarse:hidden font-mono text-[10px] tracking-wider uppercase">
+            <Kbd>SPACE</Kbd> {t("space_to_spin")} {spinMode === "wheel" ? t("click_to_spin") : ""}
           </p>
-          <p className="label hidden text-muted pointer-coarse:block font-mono text-xs">
-            CHẠM NÚT ĐỂ MỞ HÒM Ý TƯỞNG
+          <p className="label hidden text-muted pointer-coarse:block font-mono text-[10px] tracking-wider uppercase">
+            {t("touch_to_spin")}
           </p>
 
           {current && phase === "idle" && (
             <Button size="sm" variant="outline" onClick={() => useSpin.getState().loadIdea(current, { record: false })}>
-              Xem lại ý tưởng vừa quay <ArrowRightIcon className="h-3.5 w-3.5" />
+              {t("view_recent")} <ArrowRightIcon className="h-3.5 w-3.5" />
             </Button>
           )}
         </section>
 
-        {/* Right rail: system readout */}
         <aside className="flex flex-col gap-6 lg:col-span-3" aria-label="Thông số hệ thống">
           <dl className="flex flex-col border-t border-line">
-            <Row label="TREND ENGINE">
+            <Row label={t("trend_engine")}>
               <TrendEngineStatus bare />
             </Row>
-            <Row label="KHO DỮ LIỆU">
+            <Row label={t("pool_size")}>
               <span className="tabular font-mono font-bold">{POOL_ATOMS + liveTrendCount} ATOMS</span>
             </Row>
-            <Row label="KHU VỰC">
+            <Row label={t("region")}>
               <RegionToggle />
             </Row>
-            <Row label="SEED TẤT ĐỊNH">
+            <Row label={t("seed")}>
               <span className="tabular font-mono text-fg">{current && phase !== "idle" ? current.recipe.seed : "RANDOM"}</span>
             </Row>
-            <Row label="ÂM THANH TACTILE">
+            <Row label={t("audio")}>
               <AudioToggle />
             </Row>
           </dl>
@@ -319,7 +310,7 @@ export function SpinLab() {
           {injectedTrend && (
             <div className="flex items-center justify-between border border-line-strong bg-surface/50 p-3">
               <div className="flex flex-col gap-0.5">
-                <span className="label text-muted text-[10px]">XU HƯỚNG ĐƯỢC CHÈN</span>
+                <span className="label text-muted text-[10px]">{t("injected_trend")}</span>
                 <span className="font-mono text-xs font-bold text-fg uppercase truncate max-w-[180px]">
                   {injectedTrend.title}
                 </span>
@@ -338,11 +329,11 @@ export function SpinLab() {
           {locks.length > 0 && (
             <div className="flex items-start justify-between gap-3 border border-line p-3 bg-surface/30">
               <div className="flex flex-col gap-1">
-                <span className="label text-muted text-[10px]">CÁC GEN ĐANG KHÓA</span>
+                <span className="label text-muted text-[10px]">{t("locked_genes")}</span>
                 <span className="label text-fg font-mono text-xs">{locks.map((k) => DNA_LABEL[k]).join(" · ")}</span>
               </div>
               <button type="button" onClick={clearLocks} className="label text-muted underline-offset-4 hover:text-fg hover:underline text-xs">
-                Mở khóa tất cả
+                {t("unlock_all")}
               </button>
             </div>
           )}
@@ -357,7 +348,7 @@ export function SpinLab() {
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex min-h-11 items-center justify-between gap-4 border-b border-line py-2">
-      <dt className="label text-muted text-xs font-mono">{label}</dt>
+      <dt className="label text-muted text-[10px] font-mono tracking-wider">{label}</dt>
       <dd className="label text-right text-fg text-xs font-mono">{children}</dd>
     </div>
   );
@@ -367,7 +358,7 @@ function RailLink({ href, children }: { href: string; children: ReactNode }) {
   return (
     <Link
       href={href}
-      className="label group flex items-center justify-between border-b border-line py-3 text-muted transition-colors hover:text-fg font-mono text-xs"
+      className="label group flex items-center justify-between border-b border-line py-3 text-muted transition-colors hover:text-fg font-mono text-xs uppercase"
     >
       <span>{children}</span>
       <ArrowRightIcon className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />

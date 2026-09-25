@@ -5,19 +5,24 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSpin } from "@/lib/store";
 import { useOverlay } from "@/lib/ui/dialogs";
+import { useTranslation } from "@/lib/ui/useTranslation";
 import { cn } from "@/lib/ui/cn";
 import { ChaosSlider, AudioToggle, RegionToggle } from "./controls";
 import { Kbd } from "@/components/ui/Kbd";
 
-const NAV = [
-  { href: "/trends", label: "XU HƯỚNG" },
-  { href: "/saved", label: "ĐÃ LƯU" },
-  { href: "/daily", label: "DAILY SPIN" },
-  { href: "/fuse", label: "LAI TẠO (FUSE)" },
-  { href: "/about", label: "GIỚI THIỆU" },
+
+
+const NAV_KEYS = [
+  { href: "/trends", key: "nav_trends" as const },
+  { href: "/saved", key: "nav_saved" as const },
+  { href: "/daily", key: "nav_daily" as const },
+  { href: "/fuse", key: "nav_fuse" as const },
+  { href: "/about", key: "nav_about" as const },
 ];
 
 export function SiteHeader() {
+  const { t, lang } = useTranslation();
+  const setLang = useSpin((s) => s.setLang);
   const pathname = usePathname();
   const chaos = useSpin((s) => s.chaos);
   const overlay = useOverlay();
@@ -40,7 +45,7 @@ export function SiteHeader() {
           </Link>
 
           <nav className="hidden items-center gap-7 lg:flex" aria-label="Điều hướng chính">
-            {NAV.map((link) => {
+            {NAV_KEYS.map((link) => {
               const active = pathname === link.href || pathname.startsWith(`${link.href}/`);
               return (
                 <Link
@@ -52,7 +57,7 @@ export function SiteHeader() {
                     active ? "text-fg underline decoration-1 underline-offset-[6px]" : "text-muted hover:text-fg",
                   )}
                 >
-                  {link.label}
+                  {t(link.key)}
                 </Link>
               );
             })}
@@ -81,11 +86,20 @@ export function SiteHeader() {
 
           <button
             type="button"
+            onClick={() => setLang(lang === "vi" ? "en" : "vi")}
+            className="hidden h-8 w-8 items-center justify-center border border-line bg-surface/30 text-xs text-muted transition-colors hover:border-fg hover:text-fg sm:flex uppercase font-mono"
+            aria-label="Toggle Language"
+          >
+            {lang}
+          </button>
+
+          <button
+            type="button"
             onClick={() => overlay.toggle("palette")}
             className="hidden h-8 items-center gap-2 border border-line bg-surface/30 px-2.5 text-muted transition-colors hover:border-fg hover:text-fg sm:flex"
-            aria-label="Mở bảng lệnh"
+            aria-label={t("command_palette")}
           >
-            <span className="label font-mono text-[10px] tracking-wider">COMMAND</span>
+            <span className="label font-mono text-[10px] tracking-wider">{t("command_palette")}</span>
             <Kbd>⌘K</Kbd>
           </button>
 
@@ -95,7 +109,7 @@ export function SiteHeader() {
             aria-expanded={menuOpen}
             className="label h-8 border border-line px-3 text-xs text-muted hover:border-fg hover:text-fg lg:hidden"
           >
-            {menuOpen ? "ĐÓNG [×]" : "MENU [≡]"}
+            {menuOpen ? t("close") + " [×]" : t("menu") + " [≡]"}
           </button>
         </div>
       </div>
@@ -103,7 +117,7 @@ export function SiteHeader() {
       {menuOpen && (
         <div className="fixed inset-x-0 bottom-0 top-14 z-50 flex flex-col justify-between overflow-y-auto bg-bg px-6 py-8 lg:hidden">
           <nav className="flex flex-col border-t border-line" aria-label="Điều hướng">
-            {[{ href: "/", label: "LAB // VÒNG QUAY" }, ...NAV].map((link) => (
+            {[{ href: "/", key: "lab_ready" as const }, ...NAV_KEYS].map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
@@ -113,7 +127,7 @@ export function SiteHeader() {
                   pathname === link.href ? "text-fg font-bold" : "text-muted",
                 )}
               >
-                {link.label}
+                {t(link.key)}
               </Link>
             ))}
           </nav>
@@ -122,7 +136,7 @@ export function SiteHeader() {
             <div className="flex items-center justify-between">
               <RegionToggle />
               <span className="label flex items-center gap-2 text-muted text-xs">
-                ÂM THANH <AudioToggle />
+                {t("audio")} <AudioToggle />
               </span>
             </div>
           </div>

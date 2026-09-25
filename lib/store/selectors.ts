@@ -46,7 +46,7 @@ export function useSavedEntries(): HistoryEntry[] {
 
 /** The persisted settings triple. Stable between unrelated store updates. */
 export function useSettings(): Settings {
-  return useSpin(useShallow((s: SpinStore) => ({ chaos: s.chaos, region: s.region, audio: s.audio })));
+  return useSpin(useShallow((s: SpinStore) => ({ chaos: s.chaos, region: s.region, audio: s.audio, lang: s.lang })));
 }
 
 /** Imperative access for non-React code (hotkeys, audio, the command palette). */

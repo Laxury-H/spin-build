@@ -523,7 +523,10 @@ export interface HistoryEntry {
   saved: boolean;
 }
 
+export type Language = "vi" | "en";
+
 export interface Settings {
+  lang: Language;
   chaos: number;
   region: Region;
   audio: boolean;

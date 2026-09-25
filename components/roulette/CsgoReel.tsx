@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import type { Sector } from "@/types";
+import { useTranslation } from "@/lib/ui/useTranslation";
 import { playCsgoTick, playCsgoSettle } from "./audio";
 
 export interface CsgoReelProps {
@@ -101,6 +102,7 @@ export function CsgoReel({
   disabled = false,
   className = "",
 }: CsgoReelProps) {
+  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const trackRef = useRef<HTMLDivElement | null>(null);
   const lastSpinIdRef = useRef<number | null>(spinId);
@@ -351,7 +353,7 @@ export function CsgoReel({
       <div className="mt-4 flex w-full flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <span className="text-xs font-mono text-muted">
-            {isSpinning ? "ĐANG CUỘN MỞ HÒM (UNBOXING...)" : landedIndex !== null ? `ĐÃ TRÚNG: #${String(landedIndex + 1).padStart(2, "0")} ${sectors[landedIndex]?.label.toUpperCase()}` : "SẴN SÀNG QUAY"}
+            {isSpinning ? t("spinning") : landedIndex !== null ? `${t("target_lock")}: #${String(landedIndex + 1).padStart(2, "0")} ${sectors[landedIndex]?.label.toUpperCase()}` : t("ready_to_spin")}
           </span>
         </div>
 
@@ -362,7 +364,7 @@ export function CsgoReel({
           className="relative group overflow-hidden px-8 py-2.5 bg-fg text-bg font-sans font-bold text-sm tracking-wider uppercase transition-all duration-150 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-200"
         >
           <span className="relative z-10 flex items-center gap-2">
-            {isSpinning ? "ĐANG XOAY..." : "MỞ HÒM Ý TƯỞNG (SPIN)"}
+            {isSpinning ? t("spinning") : t("spin_btn")}
             <span className="font-mono text-[10px] opacity-70 border border-bg/40 px-1 py-0.5">SPACE</span>
           </span>
         </button>
@@ -370,4 +372,5 @@ export function CsgoReel({
     </div>
   );
 }
+
 

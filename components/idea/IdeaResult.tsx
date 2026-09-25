@@ -17,6 +17,7 @@ import { BuildBriefDialog } from "./BuildBriefDialog";
 import { ShareDialog } from "./ShareDialog";
 import { MutateMenu } from "./MutateMenu";
 import { NeuralGraphView } from "./NeuralGraph";
+import { useTranslation } from "@/lib/ui/useTranslation";
 
 export interface IdeaResultProps {
   idea: Idea;
@@ -27,30 +28,18 @@ export interface IdeaResultProps {
   eyebrow?: string;
 }
 
-const GENE_LABEL: Record<DnaKey, string> = {
-  domain: "LĨNH VỰC",
-  target: "ĐỐI TƯỢNG",
-  mechanic: "CƠ CHẾ",
-  trend: "XU HƯỚNG",
-  chaos: "ĐIỂM DỊ",
-  constraint: "RÀNG BUỘC",
-};
-
-const DIFFICULTY_VI: Record<string, string> = { EASY: "DỄ", MEDIUM: "VỪA", HARD: "KHÓ", UNHINGED: "ĐIÊN RỒ" };
-const ESTIMATE_VI: Record<string, string> = { "3 HOURS": "3 GIỜ", "1 DAY": "1 NGÀY", WEEKEND: "CUỐI TUẦN", "1 WEEK": "1 TUẦN" };
-
 function geneValue(idea: Idea, key: DnaKey): { value: string; detail: string } {
   const d = idea.dna;
   switch (key) {
     case "domain":
-      return { value: d.domain.short, detail: `Phân khu: ${SECTOR_BY_ID[d.domain.sector]?.label ?? d.domain.sector}` };
+      return { value: d.domain.short, detail: SECTOR_BY_ID[d.domain.sector]?.label ?? d.domain.sector };
     case "target":
       return { value: d.target.short, detail: d.target.context };
     case "mechanic":
       return { value: d.mechanic.short, detail: d.mechanic.verb };
     case "trend": {
       const sources = (d.trend.sources?.length ? d.trend.sources : [d.trend.source]).map((s) => TREND_SOURCE_LABEL[s]);
-      return { value: d.trend.title.toUpperCase(), detail: `Nguồn: ${sources.join(" / ")}` };
+      return { value: d.trend.title.toUpperCase(), detail: sources.join(" / ") };
     }
     case "chaos":
       return { value: d.chaos.short, detail: d.chaos.text };
@@ -68,6 +57,7 @@ export function IdeaResult({ idea, mode, revealKey, onOpenInLab, className, eyeb
   const toggleSave = useSpin((s) => s.toggleSave);
   const audio = useSpin((s) => s.audio);
   const isSaved = useSpin((s) => s.history.some((h) => h.id === idea.id && h.saved));
+  const { t } = useTranslation();
 
   const lab = mode === "lab";
   const c = idea.concept;
@@ -82,14 +72,14 @@ export function IdeaResult({ idea, mode, revealKey, onOpenInLab, className, eyeb
 
   const save = () => {
     toggleSave(idea.id);
-    toast(isSaved ? "ĐÃ BỎ LƯU" : "ĐÃ LƯU Ý TƯỞNG", { detail: c.name });
+    toast(isSaved ? "REMOVED" : "SAVED", { detail: c.name });
   };
 
   return (
     <article className={cn("flex w-full flex-col", className)} aria-label={c.name}>
       {/* Metadata / Eyebrow */}
       <div className="label flex flex-wrap items-center gap-x-5 gap-y-2 text-muted font-mono text-[10px]">
-        <span className="text-fg font-bold tracking-wider">{eyebrow ?? `Ý TƯỞNG // #${idea.number}`}</span>
+        <span className="text-fg font-bold tracking-wider">{eyebrow ?? `${t("idea_generated")} // #${idea.number}`}</span>
         <span>SEED {idea.recipe.seed}</span>
         <span>CHAOS {idea.recipe.chaos}%</span>
         {idea.recipe.mutations.map((m, i) => (
@@ -99,7 +89,7 @@ export function IdeaResult({ idea, mode, revealKey, onOpenInLab, className, eyeb
         ))}
         {idea.autoMutated && (
           <span className="border border-line bg-fg/10 px-1.5 py-0.5 text-fg">
-            AUTO-MUTATION (TRÁNH LỐI MÒN)
+            {t("auto_mutation")}
           </span>
         )}
         {idea.fusion && (
@@ -124,15 +114,15 @@ export function IdeaResult({ idea, mode, revealKey, onOpenInLab, className, eyeb
           </div>
 
           <div className="grid grid-cols-1 border-t border-line md:grid-cols-2">
-            <Section title="ĐIỂM KHÁC BIỆT" className="md:col-span-2">
+            <Section title={t("diff_hook")} className="md:col-span-2">
               <p className="text-base font-medium leading-relaxed text-fg">{c.hook}</p>
             </Section>
             
-            <Section title="VÌ SAO ĐÁNG LÀM" className="md:col-span-2">
+            <Section title={t("why_build")} className="md:col-span-2">
               <p className="max-w-[70ch] text-sm leading-relaxed text-muted">{c.why}</p>
             </Section>
             
-            <Section title="LUỒNG TRẢI NGHIỆM">
+            <Section title={t("core_loop")}>
               <ol className="flex flex-col gap-2.5">
                 {c.coreLoop.map((step, i) => (
                   <li key={i} className="flex gap-3 text-sm leading-relaxed">
@@ -143,7 +133,7 @@ export function IdeaResult({ idea, mode, revealKey, onOpenInLab, className, eyeb
               </ol>
             </Section>
             
-            <Section title="MVP" className="md:border-l md:border-line md:pl-6">
+            <Section title={t("mvp_features")} className="md:border-l md:border-line md:pl-6">
               <ul className="flex flex-col gap-2.5">
                 {c.mvp.map((item, i) => (
                   <li key={i} className="flex gap-3 text-sm leading-relaxed">
@@ -154,7 +144,7 @@ export function IdeaResult({ idea, mode, revealKey, onOpenInLab, className, eyeb
               </ul>
             </Section>
             
-            <Section title="TECH STACK MẪU" className="md:col-span-2">
+            <Section title={t("tech_stack")} className="md:col-span-2">
               <div className="flex flex-wrap gap-2">
                 {c.stack.map((s, i) => (
                   <div key={i} className="flex items-center gap-2 border border-line py-1 px-2.5 bg-surface/30">
@@ -165,16 +155,16 @@ export function IdeaResult({ idea, mode, revealKey, onOpenInLab, className, eyeb
               </div>
             </Section>
 
-            <Section title="ĐÁNH GIÁ THỰC TẾ" className="md:col-span-2">
+            <Section title={t("eval")} className="md:col-span-2">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="flex flex-col gap-2">
-                  <span className="label text-muted font-mono text-[10px]">ĐỘ KHÓ / THỜI GIAN</span>
+                  <span className="label text-muted font-mono text-[10px] uppercase">{t("diff_time")}</span>
                   <div className="flex flex-col gap-2">
-                    <span className="font-mono text-sm tracking-wider">{DIFFICULTY_VI[c.difficulty]} / {ESTIMATE_VI[c.estimate]}</span>
+                    <span className="font-mono text-sm tracking-wider uppercase">{c.difficulty} / {c.estimate}</span>
                   </div>
                 </div>
                 <div className="md:col-span-2 flex flex-col gap-2">
-                  <span className="label text-muted font-mono text-[10px]">TIỀM NĂNG LAN TRUYỀN</span>
+                  <span className="label text-muted font-mono text-[10px] uppercase">{t("viral_potential")}</span>
                   <ViralMeter score={c.viral.score} label={c.viral.label} reasons={c.viral.reasons} revealKey={revealKey} />
                 </div>
               </div>
@@ -189,14 +179,17 @@ export function IdeaResult({ idea, mode, revealKey, onOpenInLab, className, eyeb
 
           <div className="flex flex-col">
             <div className="label mb-3 flex items-center justify-between text-muted font-mono text-[10px]">
-              <span className="tracking-wider">CẤU TRÚC GEN (DNA)</span>
-              {lab && <span>{locks.length}/6 ĐÃ GHIM</span>}
+              <span className="tracking-wider uppercase">{t("dna_structure")}</span>
+              {lab && <span>{locks.length}/6 {t("locked_count")}</span>}
             </div>
             
             <ul className="border-t border-line">
               {DNA_KEYS.map((key, i) => {
                 const locked = lab && locks.includes(key);
                 const { value, detail } = geneValue(idea, key);
+                // Dynamically access the dictionary key for genes
+                const geneKey = `gene_${key}` as const;
+                
                 return (
                   <li
                     key={key}
@@ -211,7 +204,7 @@ export function IdeaResult({ idea, mode, revealKey, onOpenInLab, className, eyeb
                     />
                     <span className="label w-5 shrink-0 pt-0.5 text-subtle font-mono">{String(i + 1).padStart(2, "0")}</span>
                     <div className="flex min-w-0 flex-1 flex-col gap-1">
-                      <span className="label text-[9px] text-muted tracking-widest">{GENE_LABEL[key]}</span>
+                      <span className="label text-[9px] text-muted tracking-widest uppercase">{t(geneKey)}</span>
                       <span className="truncate text-sm font-bold uppercase leading-tight tracking-[-0.01em]">
                         {locked ? value : <ScrambleText text={value} trigger={revealKey} duration={300} delay={i * 40} />}
                       </span>
@@ -222,8 +215,7 @@ export function IdeaResult({ idea, mode, revealKey, onOpenInLab, className, eyeb
                         type="button"
                         onClick={() => handleToggleLock(key)}
                         aria-pressed={locked}
-                        aria-label={`${locked ? "Bỏ ghim" : "Ghim"} ${GENE_LABEL[key]}`}
-                        title={`${locked ? "Bỏ ghim" : "Ghim"} (Phím ${i + 1})`}
+                        aria-label={`${locked ? "Unlock" : "Lock"} ${t(geneKey)}`}
                         className={cn(
                           "group relative flex h-9 w-9 shrink-0 items-center justify-center border transition-colors",
                           locked ? "border-fg bg-fg text-bg" : "border-line text-muted hover:border-fg hover:text-fg",
@@ -247,31 +239,31 @@ export function IdeaResult({ idea, mode, revealKey, onOpenInLab, className, eyeb
       <div className="sticky bottom-0 z-30 -mx-4 mt-12 flex flex-wrap items-center gap-2 border-t border-line bg-bg/95 backdrop-blur-xs px-4 py-3 md:-mx-8 md:px-8">
         {!lab && onOpenInLab && (
           <Button variant="solid" onClick={onOpenInLab}>
-            Mở trong Lab <ArrowRightIcon className="h-3.5 w-3.5" />
+            {t("open_in_lab")} <ArrowRightIcon className="h-3.5 w-3.5" />
           </Button>
         )}
         <Button variant={lab ? "solid" : "outline"} kbd={lab ? "B" : undefined} onClick={() => overlay.show("brief")}>
-          Đặc tả & Prompt
+          {t("brief_btn")}
         </Button>
         {lab && (
           <>
             <Button kbd="R" onClick={() => reroll()}>
-              Đổi mảnh chưa ghim
+              {t("reroll_btn")}
             </Button>
             <Button kbd="M" onClick={() => overlay.show("mutate")}>
-              Biến đổi
+              {t("mutate_btn")}
             </Button>
           </>
         )}
         <Button variant="outline" onClick={() => router.push("/fuse")}>
-          Ghép ý tưởng
+          {t("fuse_btn")}
         </Button>
         <div className="ml-auto flex items-center gap-2">
           <Button variant="ghost" kbd={lab ? "S" : undefined} pressed={isSaved} onClick={save}>
-            {isSaved ? "Đã lưu" : "Lưu"}
+            {isSaved ? t("saved_btn") : t("save_btn")}
           </Button>
           <Button variant="ghost" kbd={lab ? "⇧S" : undefined} onClick={() => overlay.show("share")}>
-            Chia sẻ
+            {t("share_btn")}
           </Button>
         </div>
       </div>
@@ -286,7 +278,7 @@ export function IdeaResult({ idea, mode, revealKey, onOpenInLab, className, eyeb
 function Section({ title, children, className }: { title: string; children: ReactNode; className?: string }) {
   return (
     <section className={cn("flex flex-col gap-3 border-b border-line py-5", className)}>
-      <h2 className="label text-muted font-mono text-[10px] tracking-wider">{title}</h2>
+      <h2 className="label text-muted font-mono text-[10px] tracking-wider uppercase">{title}</h2>
       {children}
     </section>
   );
