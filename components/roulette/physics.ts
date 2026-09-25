@@ -33,8 +33,8 @@ export const MAX_DETENT_OVERSHOOT = 1.2;
 /** Landing never comes closer than this fraction of a sector to a boundary. */
 export const BOUNDARY_MARGIN = 0.12;
 /** Shortest / longest total spin (incl. detent), ms. */
-export const MIN_SPIN_MS = 4200;
-export const MAX_SPIN_MS = 5600;
+export const MIN_SPIN_MS = 6000;
+export const MAX_SPIN_MS = 8000;
 /** Angular speed limit accepted as an initial velocity (deg/s). */
 export const MAX_ANGULAR_VELOCITY = 2400;
 /** Release speed (deg/s) above which a drag counts as a flick. */

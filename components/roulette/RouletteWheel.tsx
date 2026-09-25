@@ -370,16 +370,7 @@ export function RouletteWheel({
         </g>
 
         {/* Fixed selector at 12 o'clock */}
-        <g className={`pointer-events-none transition-all duration-75 ${needleTick ? "opacity-100" : "opacity-80"}`}>
-          {needleTick && (
-            <circle cx={center} cy={center - radius + 10} r="25" fill="url(#flashGrad)" />
-          )}
-          <defs>
-            <radialGradient id="flashGrad" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="var(--fg)" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="var(--fg)" stopOpacity="0" />
-            </radialGradient>
-          </defs>
+        <g className="pointer-events-none">
           <line
             x1={center}
             y1={center - bezelOuter - 14}

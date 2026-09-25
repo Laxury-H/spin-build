@@ -58,7 +58,7 @@ const CARD_GAP = 10;
 const STEP = CARD_WIDTH + CARD_GAP; // 170px per item
 const WIN_SLOT_INDEX = 45; // Winning card positioned at slot 45
 const TOTAL_SLOTS = 65;
-const DURATION_MS = 5200;
+const DURATION_MS = 7500;
 
 export function CsgoReel({
   sectors,
@@ -165,7 +165,7 @@ export function CsgoReel({
 
     // Custom CS:GO unboxing deceleration curve:
     const csgoEaseOut = (t: number): number => {
-      return 1 - Math.pow(1 - t, 4.4);
+      return 1 - Math.pow(1 - t, 4.2); // Smoother, longer tail
     };
 
     const animate = (now: number) => {
@@ -255,11 +255,7 @@ export function CsgoReel({
           aria-hidden="true"
         />
 
-        {/* Flash light beam when passing */}
-        <div 
-          className={`pointer-events-none absolute left-1/2 top-0 bottom-0 z-20 w-[120px] -translate-x-1/2 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.4)_0%,transparent_70%)] transition-opacity duration-75 ${needleTick ? "opacity-100" : "opacity-0"}`} 
-        />
-        {/* Center Vertical Target Needle with CS:GO Gold/Yellow Highlight */}
+        {/* Center Vertical Target Needle */}
         <div
           className={`pointer-events-none absolute left-1/2 top-0 bottom-0 z-30 w-[2px] -translate-x-1/2 bg-fg shadow-[0_0_12px_rgba(255,255,255,0.9)] transition-transform duration-75 ${
             needleTick ? "scale-y-110 brightness-200 shadow-[0_0_30px_rgba(255,255,255,1)]" : ""
